@@ -98,7 +98,7 @@ Versi saat ini mengasumsikan user yang bisa login ke Supabase Auth adalah user a
 
 ### Alur setup admin
 
-1. Pastikan `.env.local` sudah berisi `NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+1. Pastikan `.env.local` sudah berisi `NEXT_PUBLIC_SUPABASE_URL` dan salah satu dari `NEXT_PUBLIC_SUPABASE_ANON_KEY` atau `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
 2. Buat user admin di menu Auth pada dashboard Supabase.
 3. Login melalui `/admin/login`.
 4. Kelola kategori dan menu dari `/admin`.
