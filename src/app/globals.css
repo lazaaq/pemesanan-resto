@@ -1,22 +1,23 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
 :root {
-  --background: #f7efe4;
-  --foreground: #1f1a17;
-  --muted: #61574d;
-  --card: #fffaf3;
-  --border: rgba(54, 38, 23, 0.12);
-  --primary: #b24a32;
-  --secondary: #21473f;
-  --accent: #ecb15f;
-  --ring: rgba(178, 74, 50, 0.24);
-  --shadow-soft: 0 24px 80px rgba(80, 44, 16, 0.12);
-  --surface-card: rgba(255, 250, 243, 0.84);
-  --shell-glow-primary: rgba(236, 177, 95, 0.18);
-  --shell-glow-secondary: rgba(33, 71, 63, 0.14);
-  --shell-base-start: #fbf6ee;
-  --shell-base-middle: #f7efe4;
-  --shell-base-end: #f4ecdf;
+  --background: #f2f4f0;
+  --foreground: #1a1f1c;
+  --muted: #5e6b63;
+  --card: #fafcf9;
+  --border: rgba(30, 48, 38, 0.10);
+  --primary: #2d6a4f;
+  --secondary: #1b3b2f;
+  --accent: #d4a853;
+  --ring: rgba(45, 106, 79, 0.22);
+  --shadow-soft: 0 24px 80px rgba(20, 44, 30, 0.12);
+  --surface-card: rgba(250, 252, 249, 0.86);
+  --shell-glow-primary: rgba(212, 168, 83, 0.16);
+  --shell-glow-secondary: rgba(45, 106, 79, 0.12);
+  --shell-base-start: #f5f8f4;
+  --shell-base-middle: #edf1ea;
+  --shell-base-end: #e5ebe2;
 }
 
 @theme inline {
@@ -29,7 +30,7 @@
   --color-secondary: var(--secondary);
   --color-accent: var(--accent);
   --color-ring: var(--ring);
-  --font-sans: "Avenir Next", "Segoe UI", sans-serif;
+  --font-sans: "Inter", "Avenir Next", "Segoe UI", sans-serif;
   --font-mono: "SFMono-Regular", "Cascadia Code", "Fira Code", monospace;
 }
 
@@ -44,7 +45,7 @@ html {
 body {
   background: #ffffff;
   color: var(--foreground);
-  font-family: "Avenir Next", "Segoe UI", sans-serif;
+  font-family: "Inter", "Avenir Next", "Segoe UI", sans-serif;
   min-height: 100vh;
 }
 
@@ -54,7 +55,8 @@ button {
     color 180ms ease,
     border-color 180ms ease,
     background-color 180ms ease,
-    transform 180ms ease;
+    transform 160ms ease,
+    opacity 160ms ease;
 }
 
 button {
@@ -62,7 +64,7 @@ button {
 }
 
 ::selection {
-  background: rgba(178, 74, 50, 0.18);
+  background: rgba(45, 106, 79, 0.18);
 }
 
 .surface-card {
@@ -74,16 +76,16 @@ button {
 
 .grid-pattern {
   background-image:
-    linear-gradient(rgba(97, 87, 77, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(97, 87, 77, 0.08) 1px, transparent 1px);
+    linear-gradient(rgba(94, 107, 99, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(94, 107, 99, 0.07) 1px, transparent 1px);
   background-position: center;
   background-size: 28px 28px;
 }
 
 .mobile-app-shell {
   background:
-    radial-gradient(circle at top left, var(--shell-glow-primary), transparent 26%),
-    radial-gradient(circle at right 10%, var(--shell-glow-secondary), transparent 24%),
+    radial-gradient(circle at top left, var(--shell-glow-primary), transparent 28%),
+    radial-gradient(circle at right 12%, var(--shell-glow-secondary), transparent 26%),
     linear-gradient(
       180deg,
       var(--shell-base-start) 0%,
@@ -99,4 +101,238 @@ button {
 
 .no-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+/* Scroll hint: fades the right edge of a horizontally scrollable container */
+.scroll-hint-right {
+  position: relative;
+}
+
+.scroll-hint-right::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 48px;
+  background: linear-gradient(to right, transparent, var(--background));
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* -- Add-to-cart animations ---------------------------------------------- */
+
+@keyframes qty-pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.55); }
+  70%  { transform: scale(0.88); }
+  100% { transform: scale(1); }
+}
+
+@keyframes card-flash {
+  0%   { box-shadow: 0 0 0 0 rgba(45, 106, 79, 0.45); }
+  60%  { box-shadow: 0 0 0 7px rgba(45, 106, 79, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(45, 106, 79, 0); }
+}
+
+.qty-pop {
+  display: inline-block;
+  animation: qty-pop 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.card-flash {
+  animation: card-flash 520ms ease-out;
+}
+
+/* -- Admin Dashboard Scope ----------------------------------------------- */
+
+.admin-dashboard {
+  /* Override colour tokens for the admin shell */
+  --admin-primary:   #093FB4;
+  --admin-secondary: #ED3500;
+  --admin-accent:    #FFC81E;
+  --admin-bg:        #ffffff;
+  --admin-surface:   #f8fafc;
+  --admin-border:    #e2e8f0;
+  --admin-muted:     #64748b;
+  --admin-foreground: #0f172a;
+
+  /* Sidebar dimensions */
+  --admin-sidebar-w: 240px;
+  --admin-navbar-h:  60px;
+
+  background: var(--admin-bg);
+  color: var(--admin-foreground);
+  font-family: "Inter", "Avenir Next", "Segoe UI", sans-serif;
+}
+
+.admin-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--admin-sidebar-w);
+  height: 100dvh;
+  background: #fff;
+  border-right: 1px solid var(--admin-border);
+  display: flex;
+  flex-direction: column;
+  z-index: 40;
+  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.admin-navbar {
+  position: fixed;
+  top: 0;
+  left: var(--admin-sidebar-w);
+  right: 0;
+  height: var(--admin-navbar-h);
+  background: #fff;
+  border-bottom: 1px solid var(--admin-border);
+  display: flex;
+  align-items: center;
+  padding: 0 1.5rem;
+  gap: 1rem;
+  z-index: 30;
+}
+
+.admin-content {
+  margin-left: var(--admin-sidebar-w);
+  padding-top: var(--admin-navbar-h);
+  min-height: 100dvh;
+}
+
+/* Mobile - hide sidebar off-screen */
+@media (max-width: 1023px) {
+  .admin-sidebar {
+    transform: translateX(-100%);
+    box-shadow: 4px 0 24px rgba(0,0,0,0.08);
+  }
+  .admin-sidebar.open {
+    transform: translateX(0);
+  }
+  .admin-navbar {
+    left: 0;
+  }
+  .admin-content {
+    margin-left: 0;
+  }
+}
+
+/* Sidebar nav links */
+.admin-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.625rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--admin-muted);
+  text-decoration: none;
+  transition: background 150ms ease, color 150ms ease;
+}
+.admin-nav-link:hover {
+  background: #f1f5f9;
+  color: var(--admin-foreground);
+}
+.admin-nav-link.active {
+  background: #eff4ff;
+  color: var(--admin-primary);
+  font-weight: 600;
+}
+
+/* Admin button variants */
+.admin-btn-primary {
+  background: var(--admin-primary);
+  color: #fff;
+  border: none;
+  border-radius: 9999px;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+.admin-btn-primary:hover  { opacity: 0.88; }
+.admin-btn-primary:active { transform: scale(0.97); }
+
+.admin-btn-danger {
+  background: var(--admin-secondary);
+  color: #fff;
+  border: none;
+  border-radius: 9999px;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+.admin-btn-danger:hover  { opacity: 0.88; }
+.admin-btn-danger:active { transform: scale(0.97); }
+
+.admin-btn-ghost {
+  background: transparent;
+  color: var(--admin-muted);
+  border: 1px solid var(--admin-border);
+  border-radius: 9999px;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+}
+.admin-btn-ghost:hover {
+  background: #f1f5f9;
+  color: var(--admin-foreground);
+}
+
+/* Admin section card */
+.admin-card {
+  background: #fff;
+  border: 1px solid var(--admin-border);
+  border-radius: 1rem;
+  padding: 1.5rem;
+}
+
+/* Admin form input */
+.admin-input {
+  width: 100%;
+  border-radius: 0.625rem;
+  border: 1px solid var(--admin-border);
+  background: #f8fafc;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  color: var(--admin-foreground);
+  outline: none;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.admin-input:focus {
+  border-color: var(--admin-primary);
+  box-shadow: 0 0 0 3px rgba(9, 63, 180, 0.12);
+}
+
+/* Admin stat cards */
+.admin-stat-card {
+  background: #fff;
+  border: 1px solid var(--admin-border);
+  border-radius: 1rem;
+  padding: 1.25rem 1.5rem;
+}
+
+/* Overlay for mobile sidebar */
+.admin-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 35;
+  backdrop-filter: blur(2px);
+}
+.admin-overlay.open {
+  display: block;
+}
+
+@keyframes sidebar-in {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
 }

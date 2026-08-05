@@ -1,30 +1,69 @@
 import type { CSSProperties } from "react";
 
+export type ThemePaletteValues = {
+  background: string;
+  foreground: string;
+  muted: string;
+  card: string;
+  border: string;
+  primary: string;
+  secondary: string;
+  accent: string;
+  ring: string;
+  shadowSoft: string;
+  surfaceCard: string;
+  shellGlowPrimary: string;
+  shellGlowSecondary: string;
+  shellBaseStart: string;
+  shellBaseMiddle: string;
+  shellBaseEnd: string;
+};
+
+/** The 8 tokens an admin can edit manually in the UI. */
+export const EDITABLE_TOKENS = [
+  { key: "background",  label: "Background" },
+  { key: "foreground",  label: "Teks Utama" },
+  { key: "muted",       label: "Teks Redup" },
+  { key: "card",        label: "Kartu" },
+  { key: "border",      label: "Border" },
+  { key: "primary",     label: "Warna Primer" },
+  { key: "secondary",   label: "Warna Sekunder" },
+  { key: "accent",      label: "Aksen" },
+] as const satisfies readonly { key: keyof ThemePaletteValues; label: string }[];
+
+export type EditableTokenKey = (typeof EDITABLE_TOKENS)[number]["key"];
+
 export type ThemePalette = {
   slug: string;
   name: string;
   description: string;
-  values: {
-    background: string;
-    foreground: string;
-    muted: string;
-    card: string;
-    border: string;
-    primary: string;
-    secondary: string;
-    accent: string;
-    ring: string;
-    shadowSoft: string;
-    surfaceCard: string;
-    shellGlowPrimary: string;
-    shellGlowSecondary: string;
-    shellBaseStart: string;
-    shellBaseMiddle: string;
-    shellBaseEnd: string;
-  };
+  values: ThemePaletteValues;
 };
 
 export const themePalettes: ThemePalette[] = [
+  {
+    slug: "midnight-sage",
+    name: "Midnight Sage",
+    description: "Elegan dan segar dengan forest green, warm cream, dan gold accent.",
+    values: {
+      background: "#f2f4f0",
+      foreground: "#1a1f1c",
+      muted: "#5e6b63",
+      card: "#fafcf9",
+      border: "rgba(30, 48, 38, 0.10)",
+      primary: "#2d6a4f",
+      secondary: "#1b3b2f",
+      accent: "#d4a853",
+      ring: "rgba(45, 106, 79, 0.22)",
+      shadowSoft: "0 24px 80px rgba(20, 44, 30, 0.12)",
+      surfaceCard: "rgba(250, 252, 249, 0.86)",
+      shellGlowPrimary: "rgba(212, 168, 83, 0.16)",
+      shellGlowSecondary: "rgba(45, 106, 79, 0.12)",
+      shellBaseStart: "#f5f8f4",
+      shellBaseMiddle: "#edf1ea",
+      shellBaseEnd: "#e5ebe2",
+    },
+  },
   {
     slug: "terracotta-spice",
     name: "Terracotta Spice",
@@ -119,31 +158,88 @@ export const themePalettes: ThemePalette[] = [
   },
 ];
 
-export const defaultThemePaletteSlug = themePalettes[0]?.slug ?? "terracotta-spice";
+export const defaultThemePaletteSlug = themePalettes[0]?.slug ?? "midnight-sage";
 
 export function getThemePalette(slug?: string | null) {
   return themePalettes.find((palette) => palette.slug === slug) ?? themePalettes[0];
 }
 
-export function getThemePaletteCssVariables(slug?: string | null) {
-  const palette = getThemePalette(slug);
+/**
+ * Derive secondary shell / shadow tokens automatically from primary & accent hex values.
+ * Used when only the 8 editable tokens are stored; the remaining tokens are computed.
+ */
+export function deriveShellTokens(
+  primary: string,
+  accent: string,
+  background: string,
+): Pick<
+  ThemePaletteValues,
+  | "ring"
+  | "shadowSoft"
+  | "surfaceCard"
+  | "shellGlowPrimary"
+  | "shellGlowSecondary"
+  | "shellBaseStart"
+  | "shellBaseMiddle"
+  | "shellBaseEnd"
+> {
+  return {
+    ring: `${primary}38`,           // primary at ~22% opacity
+    shadowSoft: `0 24px 80px ${primary}1f`,
+    surfaceCard: `${background}dc`,
+    shellGlowPrimary: `${accent}29`,
+    shellGlowSecondary: `${primary}1f`,
+    shellBaseStart: background,
+    shellBaseMiddle: background,
+    shellBaseEnd: background,
+  };
+}
+
+/**
+ * Resolve the final CSS-variable map for a restaurant.
+ * If `customValues` (the DB JSONB column) is present it overrides the preset palette.
+ */
+export function resolveThemeCssVariables(
+  paletteSlug?: string | null,
+  customValues?: Partial<ThemePaletteValues> | null,
+): CSSProperties {
+  const preset = getThemePalette(paletteSlug);
+
+  // Merge: custom values win where present
+  const merged: ThemePaletteValues = customValues
+    ? {
+        ...preset.values,
+        ...customValues,
+        // Recompute derived tokens when primary/accent/background are customised
+        ...deriveShellTokens(
+          customValues.primary ?? preset.values.primary,
+          customValues.accent ?? preset.values.accent,
+          customValues.background ?? preset.values.background,
+        ),
+      }
+    : preset.values;
 
   return {
-    "--background": palette.values.background,
-    "--foreground": palette.values.foreground,
-    "--muted": palette.values.muted,
-    "--card": palette.values.card,
-    "--border": palette.values.border,
-    "--primary": palette.values.primary,
-    "--secondary": palette.values.secondary,
-    "--accent": palette.values.accent,
-    "--ring": palette.values.ring,
-    "--shadow-soft": palette.values.shadowSoft,
-    "--surface-card": palette.values.surfaceCard,
-    "--shell-glow-primary": palette.values.shellGlowPrimary,
-    "--shell-glow-secondary": palette.values.shellGlowSecondary,
-    "--shell-base-start": palette.values.shellBaseStart,
-    "--shell-base-middle": palette.values.shellBaseMiddle,
-    "--shell-base-end": palette.values.shellBaseEnd,
+    "--background": merged.background,
+    "--foreground": merged.foreground,
+    "--muted": merged.muted,
+    "--card": merged.card,
+    "--border": merged.border,
+    "--primary": merged.primary,
+    "--secondary": merged.secondary,
+    "--accent": merged.accent,
+    "--ring": merged.ring,
+    "--shadow-soft": merged.shadowSoft,
+    "--surface-card": merged.surfaceCard,
+    "--shell-glow-primary": merged.shellGlowPrimary,
+    "--shell-glow-secondary": merged.shellGlowSecondary,
+    "--shell-base-start": merged.shellBaseStart,
+    "--shell-base-middle": merged.shellBaseMiddle,
+    "--shell-base-end": merged.shellBaseEnd,
   } as CSSProperties;
+}
+
+/** @deprecated Use resolveThemeCssVariables instead */
+export function getThemePaletteCssVariables(slug?: string | null) {
+  return resolveThemeCssVariables(slug, null);
 }

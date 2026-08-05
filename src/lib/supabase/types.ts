@@ -19,6 +19,7 @@ export type Database = {
           service_fee: number;
           tax_rate: number;
           theme_palette_slug: string;
+          custom_theme_palette: Json | null;
           is_active: boolean;
           created_at: string;
           updated_at: string;
@@ -32,6 +33,7 @@ export type Database = {
           service_fee?: number;
           tax_rate?: number;
           theme_palette_slug?: string;
+          custom_theme_palette?: Json | null;
           is_active?: boolean;
           created_at?: string;
           updated_at?: string;
@@ -45,6 +47,7 @@ export type Database = {
           service_fee?: number;
           tax_rate?: number;
           theme_palette_slug?: string;
+          custom_theme_palette?: Json | null;
           is_active?: boolean;
           created_at?: string;
           updated_at?: string;

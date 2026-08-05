@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getThemePalette } from "@/config/theme-palettes";
+import { getThemePalette, type EditableTokenKey } from "@/config/theme-palettes";
 import { siteConfig } from "@/config/site";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { slugify } from "@/lib/utils/slugify";
@@ -95,6 +95,10 @@ async function replaceMenuItemCategories(
 function refreshAdminViews() {
   revalidatePath("/");
   revalidatePath("/admin");
+  revalidatePath("/admin/presets");
+  revalidatePath("/admin/custom-palette");
+  revalidatePath("/admin/categories");
+  revalidatePath("/admin/menus");
   revalidatePath("/admin/login");
 }
 
@@ -151,7 +155,56 @@ export async function updateRestaurantThemePaletteAction(formData: FormData) {
     .from("restaurants")
     .update({
       theme_palette_slug: palette.slug,
+      // Clear any custom palette when switching to a preset
+      custom_theme_palette: null,
     })
+    .eq("id", restaurantId);
+
+  if (error) {
+    throw error;
+  }
+
+  refreshAdminViews();
+}
+
+const EDITABLE_KEYS: EditableTokenKey[] = [
+  "background",
+  "foreground",
+  "muted",
+  "card",
+  "border",
+  "primary",
+  "secondary",
+  "accent",
+];
+
+export async function saveCustomPaletteAction(formData: FormData) {
+  const { restaurantId, supabase } = await getRestaurantId();
+
+  const customValues: Record<string, string> = {};
+  for (const key of EDITABLE_KEYS) {
+    const val = getString(formData, key);
+    if (val) customValues[key] = val;
+  }
+
+  const { error } = await supabase
+    .from("restaurants")
+    .update({ custom_theme_palette: customValues })
+    .eq("id", restaurantId);
+
+  if (error) {
+    throw error;
+  }
+
+  refreshAdminViews();
+}
+
+export async function resetCustomPaletteAction() {
+  const { restaurantId, supabase } = await getRestaurantId();
+
+  const { error } = await supabase
+    .from("restaurants")
+    .update({ custom_theme_palette: null })
     .eq("id", restaurantId);
 
   if (error) {
