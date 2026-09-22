@@ -24,16 +24,6 @@ function IconPalette() {
     </svg>
   );
 }
-function IconSliders() {
-  return (
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="4" y1="21" x2="4" y2="14" /><line x1="4" y1="10" x2="4" y2="3" />
-      <line x1="12" y1="21" x2="12" y2="12" /><line x1="12" y1="8" x2="12" y2="3" />
-      <line x1="20" y1="21" x2="20" y2="16" /><line x1="20" y1="12" x2="20" y2="3" />
-      <line x1="1" y1="14" x2="7" y2="14" /><line x1="9" y1="8" x2="15" y2="8" /><line x1="17" y1="16" x2="23" y2="16" />
-    </svg>
-  );
-}
 function IconTag() {
   return (
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -48,6 +38,16 @@ function IconUtensilsCrossed() {
       <path d="M16 2l5 5-5 5"/><path d="M8 2 3 7l5 5"/>
       <path d="M14 14l5.5 5.5a2.121 2.121 0 0 1-3 3L11 17"/>
       <path d="M11 11 5.5 5.5a2.121 2.121 0 0 1 3-3L14 8"/>
+    </svg>
+  );
+}
+function IconReceipt() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1z" />
+      <path d="M8 7h8" />
+      <path d="M8 12h8" />
+      <path d="M8 17h5" />
     </svg>
   );
 }
@@ -86,21 +86,19 @@ function IconExternalLink() {
 // ─── Nav config ──────────────────────────────────────────────────────────────
 
 const NAV_ITEMS = [
-  { href: "/admin",                label: "Overview",         icon: <IconGrid />,          title: "Overview Restoran" },
-  { href: "/admin/presets",        label: "Palet Preset",      icon: <IconPalette />,       title: "Palet Warna Preset" },
-  { href: "/admin/custom-palette", label: "Kustom Palet",      icon: <IconSliders />,       title: "Konfigurasi Custom Palette" },
-  { href: "/admin/categories",     label: "Kategori",          icon: <IconTag />,           title: "Kelola Kategori Menu" },
-  { href: "/admin/menus",          label: "Menu",              icon: <IconUtensilsCrossed />,title: "Kelola Makanan & Minuman" },
+  { href: "/admin",                label: "Dashboard",        icon: <IconGrid />,           title: "Dashboard Restoran" },
+  { href: "/admin/orders",         label: "Order",            icon: <IconReceipt />,        title: "Data Pemesanan" },
+  { href: "/admin/menus",          label: "Menu",             icon: <IconUtensilsCrossed />, title: "Kelola Makanan & Minuman" },
+  { href: "/admin/categories",     label: "Kategori",         icon: <IconTag />,            title: "Kelola Kategori Menu" },
+  { href: "/admin/presets",        label: "Palet Warna",      icon: <IconPalette />,        title: "Pengaturan Palet Warna" },
 ];
 
 // ─── Sidebar content ─────────────────────────────────────────────────────────
 
 function SidebarContent({
-  userEmail,
   pathname,
   onNavClick,
 }: {
-  userEmail: string;
   pathname: string;
   onNavClick?: () => void;
 }) {
@@ -109,7 +107,7 @@ function SidebarContent({
       {/* Logo / branding */}
       <div
         style={{ borderBottom: "1px solid var(--admin-border)" }}
-        className="flex items-center gap-2.5 px-5 py-4"
+        className="flex h-[var(--admin-navbar-h)] items-center gap-2.5 px-5"
       >
         <span
           style={{ background: "var(--admin-primary)" }}
@@ -156,15 +154,13 @@ function SidebarContent({
             );
           })}
         </ul>
+      </nav>
 
-        <div className="my-4" style={{ borderTop: "1px solid var(--admin-border)" }} />
-
-        <p
-          className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest"
-          style={{ color: "var(--admin-muted)", opacity: 0.7 }}
-        >
-          Lainnya
-        </p>
+      {/* Sidebar footer */}
+      <div
+        style={{ borderTop: "1px solid var(--admin-border)" }}
+        className="px-3 py-4"
+      >
         <Link
           href="/"
           target="_blank"
@@ -174,37 +170,6 @@ function SidebarContent({
           <IconExternalLink />
           Halaman User
         </Link>
-      </nav>
-
-      {/* User / sign-out footer */}
-      <div
-        style={{ borderTop: "1px solid var(--admin-border)" }}
-        className="px-4 py-4"
-      >
-        <div className="mb-3 flex items-center gap-2.5 rounded-lg px-1">
-          <span
-            style={{ background: "var(--admin-primary)" }}
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white"
-          >
-            {userEmail.charAt(0).toUpperCase()}
-          </span>
-          <p
-            className="truncate text-xs font-medium"
-            style={{ color: "var(--admin-foreground)", maxWidth: 140 }}
-          >
-            {userEmail}
-          </p>
-        </div>
-        <form action={signOutAdminAction}>
-          <button
-            type="submit"
-            className="admin-btn-ghost flex w-full items-center justify-center gap-1.5 py-2 text-xs"
-            style={{ color: "var(--admin-secondary)", borderColor: "rgba(237,53,0,0.3)" }}
-          >
-            <IconLogOut />
-            Keluar
-          </button>
-        </form>
       </div>
     </>
   );
@@ -247,7 +212,6 @@ export function AdminLayoutShell({
       {/* ── Sidebar ── */}
       <aside className={`admin-sidebar${sidebarOpen ? " open" : ""}`} aria-label="Admin navigation">
         <SidebarContent
-          userEmail={userEmail}
           pathname={pathname}
           onNavClick={() => setSidebarOpen(false)}
         />
@@ -278,25 +242,49 @@ export function AdminLayoutShell({
             className="mt-0.5 truncate text-xs"
             style={{ color: "var(--admin-muted)" }}
           >
-            Login sebagai {userEmail}
+            Panel manajemen restoran
           </p>
         </div>
 
-        {/* Accent badge */}
-        <span
-          className="hidden sm:inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
-          style={{
-            background: "rgba(9,63,180,0.08)",
-            color: "var(--admin-primary)",
-            border: "1px solid rgba(9,63,180,0.18)",
-          }}
-        >
-          <span
-            className="h-1.5 w-1.5 rounded-full"
-            style={{ background: "var(--admin-primary)" }}
-          />
-          Admin
-        </span>
+        {/* Account dropdown */}
+        <details className="group relative">
+          <summary className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-full text-sm font-bold text-white transition-opacity hover:opacity-90 [&::-webkit-details-marker]:hidden" style={{ background: "var(--admin-primary)" }}>
+            {userEmail.charAt(0).toUpperCase()}
+          </summary>
+
+          <div
+            className="absolute right-0 top-11 z-50 w-64 rounded-xl bg-white p-3 shadow-xl"
+            style={{ border: "1px solid var(--admin-border)" }}
+          >
+            <div className="mb-3 flex items-center gap-2.5">
+              <span
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+                style={{ background: "var(--admin-primary)" }}
+              >
+                {userEmail.charAt(0).toUpperCase()}
+              </span>
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "var(--admin-muted)" }}>
+                  Admin
+                </p>
+                <p className="truncate text-sm font-medium" style={{ color: "var(--admin-foreground)" }}>
+                  {userEmail}
+                </p>
+              </div>
+            </div>
+
+            <form action={signOutAdminAction}>
+              <button
+                type="submit"
+                className="admin-btn-ghost flex w-full items-center justify-center gap-1.5 py-2 text-xs"
+                style={{ color: "var(--admin-secondary)", borderColor: "rgba(237,53,0,0.3)" }}
+              >
+                <IconLogOut />
+                Keluar
+              </button>
+            </form>
+          </div>
+        </details>
       </header>
 
       {/* ── Main content ── */}

@@ -1,10 +1,10 @@
 import {
-  createMenuItemAction,
   deleteMenuItemAction,
   updateMenuItemAction,
 } from "@/app/admin/actions";
 import { siteConfig } from "@/config/site";
 import { CheckboxInput, SectionHeader, TextInput } from "@/features/admin/components/admin-ui";
+import { AddMenuDialog } from "@/features/admin/components/add-menu-dialog";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -30,6 +30,20 @@ type MenuItemRow = {
   is_featured: boolean;
   categoryIds: string[];
 };
+
+type MenuCategoryGroup = {
+  id: string;
+  name: string;
+  items: MenuItemRow[];
+};
+
+function formatRupiah(value: number) {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
 
 export default async function AdminMenusPage() {
   const supabase = await createServerSupabaseClient();
@@ -86,197 +100,212 @@ export default async function AdminMenusPage() {
       .map((relation) => relation.category_id),
   }));
 
+  const menuGroups: MenuCategoryGroup[] = [
+    ...categoryRows.map((category) => ({
+      id: category.id,
+      name: category.name,
+      items: enrichedMenuItems.filter((item) => item.categoryIds.includes(category.id)),
+    })),
+    {
+      id: "uncategorized",
+      name: "Tanpa kategori",
+      items: enrichedMenuItems.filter((item) => item.categoryIds.length === 0),
+    },
+  ].filter((group) => group.items.length > 0);
+
   return (
-    <section className="admin-card space-y-6 max-w-5xl">
+    <section className="w-full space-y-6">
       <SectionHeader
         eyebrow="Menu"
         title="CRUD Makanan dan Minuman"
         description="Tambah item baru, ubah harga, urutan, ketersediaan, dan pilih satu atau beberapa kategori untuk setiap item."
       />
 
-      {/* Form Tambah Menu Baru */}
-      <form
-        action={createMenuItemAction}
-        className="grid gap-4 rounded-xl p-5"
-        style={{ background: "var(--admin-surface)", border: "1px solid var(--admin-border)" }}
-      >
-        <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--admin-muted)" }}>
-          Tambah menu baru
-        </p>
-        <div className="grid gap-3 md:grid-cols-2">
-          <TextInput label="Nama menu" name="name" placeholder="Ayam Bakar Madu" required />
-          <TextInput label="Slug" name="slug" placeholder="ayam-bakar-madu" />
-          <TextInput label="Harga" name="price" placeholder="38000" required type="number" />
-          <TextInput
-            defaultValue={15}
-            label="Waktu masak (menit)"
-            name="preparationTimeMinutes"
-            type="number"
-          />
-          <TextInput label="Urutan tampil" name="sortOrder" type="number" defaultValue={0} />
-          <TextInput label="URL gambar" name="imageUrl" placeholder="https://..." />
-        </div>
-
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium" style={{ color: "var(--admin-foreground)" }}>
-            Deskripsi
-          </span>
-          <textarea
-            name="description"
-            rows={3}
-            className="admin-input"
-            placeholder="Deskripsi singkat menu"
-            style={{ resize: "vertical" }}
-          />
-        </label>
-
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium" style={{ color: "var(--admin-foreground)" }}>
-            Kategori
-          </span>
-          <select
-            multiple
-            name="categoryIds"
-            className="admin-input"
-            style={{ minHeight: "9rem" }}
-          >
-            {categoryRows.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-          <p className="text-xs" style={{ color: "var(--admin-muted)" }}>
-            Gunakan Cmd / Ctrl saat memilih lebih dari satu kategori.
-          </p>
-        </label>
-
-        <div className="grid gap-3 md:grid-cols-2">
-          <CheckboxInput defaultChecked label="Menu tersedia" name="isAvailable" />
-          <CheckboxInput label="Tandai sebagai featured" name="isFeatured" />
-        </div>
-
-        <button type="submit" className="admin-btn-primary w-full py-2.5">
-          Tambah menu baru
-        </button>
-      </form>
-
       {/* List Menu Items */}
-      <div className="space-y-4">
-        {enrichedMenuItems.map((item) => (
-          <div
-            key={item.id}
-            className="rounded-xl p-4 space-y-4"
-            style={{ border: "1px solid var(--admin-border)", background: "#fff" }}
-          >
-            <form action={updateMenuItemAction} className="space-y-3">
-              <input type="hidden" name="menuItemId" value={item.id} />
-              <div className="grid gap-3 md:grid-cols-2">
-                <TextInput defaultValue={item.name} label="Nama menu" name="name" required />
-                <TextInput defaultValue={item.slug} label="Slug" name="slug" required />
-                <TextInput
-                  defaultValue={item.price}
-                  label="Harga"
-                  name="price"
-                  required
-                  type="number"
-                />
-                <TextInput
-                  defaultValue={item.preparation_time_minutes}
-                  label="Waktu masak (menit)"
-                  name="preparationTimeMinutes"
-                  type="number"
-                />
-                <TextInput
-                  defaultValue={item.sort_order}
-                  label="Urutan tampil"
-                  name="sortOrder"
-                  type="number"
-                />
-                <TextInput
-                  defaultValue={item.image_url}
-                  label="URL gambar"
-                  name="imageUrl"
-                />
+      <div className="w-full space-y-6">
+        <AddMenuDialog categories={categoryRows} />
+
+        {menuGroups.length === 0 ? (
+          <div className="w-full bg-white py-6 text-sm" style={{ color: "var(--admin-muted)" }}>
+            Belum ada menu yang ditambahkan.
+          </div>
+        ) : (
+          menuGroups.map((group) => (
+            <section
+              key={group.id}
+              className="w-full space-y-3 border-t pt-6 first:border-t-0 first:pt-0"
+              style={{ borderColor: "var(--admin-border)" }}
+            >
+              <div className="flex items-end justify-between gap-3">
+                <h3 className="text-2xl font-bold tracking-tight" style={{ color: "var(--admin-foreground)" }}>
+                  {group.name}
+                </h3>
+                <span
+                  className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold"
+                  style={{ color: "var(--admin-muted)" }}
+                >
+                  {group.items.length} menu
+                </span>
               </div>
 
-              <label className="flex flex-col gap-1.5">
-                <span className="text-xs font-medium" style={{ color: "var(--admin-foreground)" }}>
-                  Deskripsi
-                </span>
-                <textarea
-                  name="description"
-                  rows={3}
-                  defaultValue={item.description ?? ""}
-                  className="admin-input"
-                  style={{ resize: "vertical" }}
-                />
-              </label>
-
-              <label className="flex flex-col gap-1.5">
-                <span className="text-xs font-medium" style={{ color: "var(--admin-foreground)" }}>
-                  Kategori
-                </span>
-                <select
-                  multiple
-                  name="categoryIds"
-                  defaultValue={item.categoryIds}
-                  className="admin-input"
-                  style={{ minHeight: "9rem" }}
+              <div
+                className="w-full overflow-hidden bg-white"
+                style={{ borderTop: "1px solid var(--admin-border)" }}
+              >
+                <div
+                  className="hidden grid-cols-[minmax(220px,1.4fr)_140px_120px_120px_100px] gap-4 border-b px-4 py-3 text-xs font-semibold uppercase tracking-wider md:grid"
+                  style={{
+                    borderColor: "var(--admin-border)",
+                    color: "var(--admin-muted)",
+                  }}
                 >
-                  {categoryRows.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  <span>Menu</span>
+                  <span>Harga</span>
+                  <span>Status</span>
+                  <span>Featured</span>
+                  <span className="text-right">Action</span>
+                </div>
 
-              {/* Category Badges */}
-              {item.categoryIds.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {item.categoryIds.map((categoryId) => (
-                    <span
-                      key={`${item.id}-${categoryId}`}
-                      className="rounded-full px-2.5 py-1 text-xs font-semibold"
-                      style={{
-                        background: "rgba(9,63,180,0.08)",
-                        color: "var(--admin-primary)",
-                        border: "1px solid rgba(9,63,180,0.18)",
-                      }}
-                    >
-                      {categoryLookup.get(categoryId) ?? "Kategori"}
-                    </span>
+                <div className="divide-y" style={{ borderColor: "var(--admin-border)" }}>
+                  {group.items.map((item) => (
+                    <details key={`${group.id}-${item.id}`} className="group">
+                      <summary className="grid cursor-pointer list-none gap-3 px-4 py-4 md:grid-cols-[minmax(220px,1.4fr)_140px_120px_120px_100px] md:items-center [&::-webkit-details-marker]:hidden">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold" style={{ color: "var(--admin-foreground)" }}>
+                            {item.name}
+                          </p>
+                          <p className="mt-1 truncate text-xs" style={{ color: "var(--admin-muted)" }}>
+                            {item.description || item.slug}
+                          </p>
+                          {item.categoryIds.length > 1 && (
+                            <p className="mt-1 truncate text-[11px]" style={{ color: "var(--admin-muted)" }}>
+                              {item.categoryIds
+                                .map((categoryId) => categoryLookup.get(categoryId))
+                                .filter(Boolean)
+                                .join(", ")}
+                            </p>
+                          )}
+                        </div>
+                        <span className="text-sm font-medium" style={{ color: "var(--admin-foreground)" }}>
+                          {formatRupiah(item.price)}
+                        </span>
+                        <span
+                          className="w-fit rounded-full px-2.5 py-1 text-xs font-semibold"
+                          style={{
+                            background: item.is_available ? "rgba(22,163,74,0.10)" : "#f1f5f9",
+                            color: item.is_available ? "#15803d" : "var(--admin-muted)",
+                          }}
+                        >
+                          {item.is_available ? "Tersedia" : "Nonaktif"}
+                        </span>
+                        <span className="text-xs font-medium" style={{ color: "var(--admin-muted)" }}>
+                          {item.is_featured ? "Featured" : "-"}
+                        </span>
+                        <span className="text-left md:text-right">
+                          <span className="admin-btn-ghost inline-flex px-4 py-2 text-xs group-open:bg-slate-100">
+                            Edit
+                          </span>
+                        </span>
+                      </summary>
+
+                      <div className="bg-slate-50 px-4 pb-5 pt-1">
+                        <form action={updateMenuItemAction} className="space-y-3">
+                          <input type="hidden" name="menuItemId" value={item.id} />
+                          <div className="grid gap-3 md:grid-cols-2">
+                            <TextInput defaultValue={item.name} label="Nama menu" name="name" required />
+                            <TextInput defaultValue={item.slug} label="Slug" name="slug" required />
+                            <TextInput
+                              defaultValue={item.price}
+                              label="Harga"
+                              name="price"
+                              required
+                              type="number"
+                            />
+                            <TextInput
+                              defaultValue={item.preparation_time_minutes}
+                              label="Waktu masak (menit)"
+                              name="preparationTimeMinutes"
+                              type="number"
+                            />
+                            <TextInput
+                              defaultValue={item.sort_order}
+                              label="Urutan tampil"
+                              name="sortOrder"
+                              type="number"
+                            />
+                            <TextInput
+                              defaultValue={item.image_url}
+                              label="URL gambar"
+                              name="imageUrl"
+                            />
+                          </div>
+
+                          <label className="flex flex-col gap-1.5">
+                            <span className="text-xs font-medium" style={{ color: "var(--admin-foreground)" }}>
+                              Deskripsi
+                            </span>
+                            <textarea
+                              name="description"
+                              rows={3}
+                              defaultValue={item.description ?? ""}
+                              className="admin-input"
+                              style={{ resize: "vertical" }}
+                            />
+                          </label>
+
+                          <label className="flex flex-col gap-1.5">
+                            <span className="text-xs font-medium" style={{ color: "var(--admin-foreground)" }}>
+                              Kategori
+                            </span>
+                            <select
+                              multiple
+                              name="categoryIds"
+                              defaultValue={item.categoryIds}
+                              className="admin-input"
+                              style={{ minHeight: "9rem" }}
+                            >
+                              {categoryRows.map((category) => (
+                                <option key={category.id} value={category.id}>
+                                  {category.name}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+
+                          <div className="grid gap-3 md:grid-cols-2">
+                            <CheckboxInput
+                              defaultChecked={item.is_available}
+                              label="Menu tersedia"
+                              name="isAvailable"
+                            />
+                            <CheckboxInput
+                              defaultChecked={item.is_featured}
+                              label="Tandai sebagai featured"
+                              name="isFeatured"
+                            />
+                          </div>
+
+                          <div className="flex flex-wrap gap-3">
+                            <button type="submit" className="admin-btn-primary rounded-full px-4 py-2 text-sm">
+                              Simpan menu
+                            </button>
+                          </div>
+                        </form>
+
+                        <form action={deleteMenuItemAction} className="mt-3">
+                          <input type="hidden" name="menuItemId" value={item.id} />
+                          <button type="submit" className="admin-btn-danger rounded-full px-4 py-2 text-sm">
+                            Hapus menu
+                          </button>
+                        </form>
+                      </div>
+                    </details>
                   ))}
                 </div>
-              )}
-
-              <div className="grid gap-3 md:grid-cols-2">
-                <CheckboxInput
-                  defaultChecked={item.is_available}
-                  label="Menu tersedia"
-                  name="isAvailable"
-                />
-                <CheckboxInput
-                  defaultChecked={item.is_featured}
-                  label="Tandai sebagai featured"
-                  name="isFeatured"
-                />
               </div>
-
-              <button type="submit" className="admin-btn-primary rounded-full px-4 py-2 text-sm">
-                Simpan menu
-              </button>
-            </form>
-
-            <form action={deleteMenuItemAction}>
-              <input type="hidden" name="menuItemId" value={item.id} />
-              <button type="submit" className="admin-btn-danger rounded-full px-4 py-2 text-sm">
-                Hapus menu
-              </button>
-            </form>
-          </div>
-        ))}
+            </section>
+          ))
+        )}
       </div>
     </section>
   );

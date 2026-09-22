@@ -176,13 +176,17 @@ export default async function AdminOverviewPage() {
   }
 
   // Fast parallel light queries (count only)
-  const [{ count: categoryCount }, { count: menuItemCount }] = await Promise.all([
+  const [{ count: categoryCount }, { count: menuItemCount }, { count: orderCount }] = await Promise.all([
     supabase
       .from("categories")
       .select("id", { count: "exact", head: true })
       .eq("restaurant_id", restaurant.id),
     supabase
       .from("menu_items")
+      .select("id", { count: "exact", head: true })
+      .eq("restaurant_id", restaurant.id),
+    supabase
+      .from("orders")
       .select("id", { count: "exact", head: true })
       .eq("restaurant_id", restaurant.id),
   ]);
@@ -194,12 +198,19 @@ export default async function AdminOverviewPage() {
   return (
     <div className="space-y-8">
       {/* Stat Cards Overview */}
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <AdminStatCard
           label="Restaurant"
           value={restaurant.name}
           helper={`Slug: ${restaurant.slug}`}
           accent="blue"
+        />
+        <AdminStatCard
+          label="Order"
+          value={String(orderCount ?? 0)}
+          helper="Klik untuk melihat pesanan masuk dari user."
+          accent="blue"
+          href="/admin/orders"
         />
         <AdminStatCard
           label="Kategori"
@@ -227,6 +238,26 @@ export default async function AdminOverviewPage() {
       {/* Quick Navigation Cards */}
       <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
         <Link
+          href={"/admin/orders" as never}
+          className="admin-card flex flex-col justify-between p-6 transition-all hover:border-[var(--admin-primary)] hover:shadow-md"
+        >
+          <div className="space-y-2">
+            <p className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "var(--admin-primary)" }}>
+              Order
+            </p>
+            <h3 className="text-lg font-bold" style={{ color: "var(--admin-foreground)" }}>
+              Data Pemesanan
+            </h3>
+            <p className="text-xs leading-5" style={{ color: "var(--admin-muted)" }}>
+              Lihat pesanan user yang masuk dari halaman checkout untuk kebutuhan testing operasional.
+            </p>
+          </div>
+          <span className="mt-4 text-xs font-semibold" style={{ color: "var(--admin-primary)" }}>
+            Lihat Order →
+          </span>
+        </Link>
+
+        <Link
           href={"/admin/presets" as never}
           className="admin-card flex flex-col justify-between p-6 transition-all hover:border-[var(--admin-primary)] hover:shadow-md"
         >
@@ -235,34 +266,14 @@ export default async function AdminOverviewPage() {
               Branding
             </p>
             <h3 className="text-lg font-bold" style={{ color: "var(--admin-foreground)" }}>
-              Palet Preset
+              Palet Warna
             </h3>
             <p className="text-xs leading-5" style={{ color: "var(--admin-muted)" }}>
-              Pilih dari tema warna standar (Midnight Sage, Terracotta Spice, Ocean Breeze, dll).
+              Atur custom palette dan pilih preset warna dalam satu halaman pengaturan branding.
             </p>
           </div>
           <span className="mt-4 text-xs font-semibold" style={{ color: "var(--admin-primary)" }}>
-            Buka Palet Preset →
-          </span>
-        </Link>
-
-        <Link
-          href={"/admin/custom-palette" as never}
-          className="admin-card flex flex-col justify-between p-6 transition-all hover:border-[var(--admin-primary)] hover:shadow-md"
-        >
-          <div className="space-y-2">
-            <p className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "var(--admin-primary)" }}>
-              Kustomisasi
-            </p>
-            <h3 className="text-lg font-bold" style={{ color: "var(--admin-foreground)" }}>
-              Kustom Palet
-            </h3>
-            <p className="text-xs leading-5" style={{ color: "var(--admin-muted)" }}>
-              Atur setiap variabel warna (Primary, Secondary, Accent, Background, Card) secara manual.
-            </p>
-          </div>
-          <span className="mt-4 text-xs font-semibold" style={{ color: "var(--admin-primary)" }}>
-            Buka Kustom Palet →
+            Buka Pengaturan Palet →
           </span>
         </Link>
 

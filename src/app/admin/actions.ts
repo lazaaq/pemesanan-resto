@@ -333,3 +333,47 @@ export async function deleteMenuItemAction(formData: FormData) {
 
   refreshAdminViews();
 }
+
+/**
+ * Persist the new sort_order after drag-and-drop reordering.
+ * Receives an ordered array of category IDs; each ID gets sort_order = index.
+ */
+export async function reorderCategoriesAction(formData: FormData) {
+  const { restaurantId, supabase } = await getRestaurantId();
+  const raw = getString(formData, "orderedIds");
+  const orderedIds: string[] = JSON.parse(raw);
+
+  const updates = orderedIds.map((id, index) =>
+    supabase
+      .from("categories")
+      .update({ sort_order: index })
+      .eq("id", id)
+      .eq("restaurant_id", restaurantId),
+  );
+
+  const results = await Promise.all(updates);
+  const firstError = results.find((r) => r.error)?.error;
+  if (firstError) throw firstError;
+
+  refreshAdminViews();
+}
+
+/**
+ * Toggle the is_active flag of a single category.
+ * Called client-side via startTransition so the toggle feels instant.
+ */
+export async function toggleCategoryActiveAction(formData: FormData) {
+  const { restaurantId, supabase } = await getRestaurantId();
+  const categoryId = getString(formData, "categoryId");
+  const isActive = formData.get("isActive") === "true";
+
+  const { error } = await supabase
+    .from("categories")
+    .update({ is_active: isActive })
+    .eq("id", categoryId)
+    .eq("restaurant_id", restaurantId);
+
+  if (error) throw error;
+
+  refreshAdminViews();
+}

@@ -1,21 +1,10 @@
-import {
-  createCategoryAction,
-  deleteCategoryAction,
-  updateCategoryAction,
-} from "@/app/admin/actions";
+import { createCategoryAction } from "@/app/admin/actions";
 import { siteConfig } from "@/config/site";
-import { CheckboxInput, SectionHeader, TextInput } from "@/features/admin/components/admin-ui";
+import { SectionHeader, TextInput } from "@/features/admin/components/admin-ui";
+import { CategoryList, type CategoryRow } from "@/features/admin/components/category-list";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
-
-type CategoryRow = {
-  id: string;
-  name: string;
-  slug: string;
-  sort_order: number;
-  is_active: boolean;
-};
 
 export default async function AdminCategoriesPage() {
   const supabase = await createServerSupabaseClient();
@@ -42,77 +31,35 @@ export default async function AdminCategoriesPage() {
   const categoryRows: CategoryRow[] = (categories ?? []) as CategoryRow[];
 
   return (
-    <section className="admin-card space-y-6 max-w-4xl">
+    <div className="w-full space-y-6">
       <SectionHeader
         eyebrow="Kategori"
-        title="CRUD Kategori Menu"
-        description="Tambahkan kategori baru, ubah nama atau urutan tampil, atau nonaktifkan kategori tertentu."
+        title="Kelola Kategori Menu"
+        description="Seret ikon burger di sisi kiri untuk mengubah urutan kategori. Ubah nama atau toggle status aktif secara langsung."
       />
 
       {/* Form Tambah Kategori */}
       <form
         action={createCategoryAction}
-        className="grid gap-4 rounded-xl p-5"
-        style={{ background: "var(--admin-surface)", border: "1px solid var(--admin-border)" }}
+        className="space-y-3"
       >
         <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--admin-muted)" }}>
           Tambah kategori baru
         </p>
-        <div className="grid gap-3 md:grid-cols-2">
-          <TextInput label="Nama kategori" name="name" placeholder="Best Seller" required />
-          <TextInput label="Slug" name="slug" placeholder="best-seller" />
-          <TextInput label="Urutan tampil" name="sortOrder" type="number" defaultValue={0} />
-          <CheckboxInput defaultChecked label="Kategori aktif" name="isActive" />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <div className="min-w-0 flex-1">
+            <TextInput label="Nama kategori" name="name" placeholder="Best Seller" required />
+          </div>
+          <button type="submit" className="admin-btn-primary px-5 py-2.5 sm:shrink-0">
+            Tambah kategori
+          </button>
         </div>
-        <button type="submit" className="admin-btn-primary w-full py-2.5">
-          Tambah kategori
-        </button>
       </form>
 
-      {/* List Kategori */}
-      <div className="space-y-3">
-        {categoryRows.map((category) => (
-          <div
-            key={category.id}
-            className="rounded-xl p-4 space-y-4"
-            style={{ border: "1px solid var(--admin-border)", background: "#fff" }}
-          >
-            <form action={updateCategoryAction} className="space-y-3">
-              <input type="hidden" name="categoryId" value={category.id} />
-              <div className="grid gap-3 md:grid-cols-2">
-                <TextInput
-                  defaultValue={category.name}
-                  label="Nama kategori"
-                  name="name"
-                  required
-                />
-                <TextInput defaultValue={category.slug} label="Slug" name="slug" required />
-                <TextInput
-                  defaultValue={category.sort_order}
-                  label="Urutan tampil"
-                  name="sortOrder"
-                  type="number"
-                />
-                <CheckboxInput
-                  defaultChecked={category.is_active}
-                  label="Kategori aktif"
-                  name="isActive"
-                />
-              </div>
-              <button type="submit" className="admin-btn-primary rounded-full px-4 py-2 text-sm">
-                Simpan kategori
-              </button>
-            </form>
-
-            <form action={deleteCategoryAction}>
-              <input type="hidden" name="categoryId" value={category.id} />
-              <button type="submit" className="admin-btn-danger rounded-full px-4 py-2 text-sm">
-                Hapus kategori
-              </button>
-            </form>
-          </div>
-        ))}
+      {/* List Kategori (Full-width 1 column, 2-column data row with Drag-and-Drop) */}
+      <div className="w-full">
+        <CategoryList initialCategories={categoryRows} />
       </div>
-    </section>
+    </div>
   );
 }
