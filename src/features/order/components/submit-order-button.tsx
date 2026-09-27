@@ -1,12 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { siteConfig } from "@/config/site";
 import {
   CHECKOUT_CART_COOKIE_KEY,
   type CartItem,
   formatCurrency,
   getOrderSummary,
+  readTableCode,
 } from "@/features/order/lib/checkout";
 
 type SubmitOrderButtonProps = {
@@ -36,7 +36,7 @@ export function SubmitOrderButton({ cart, orderRoute }: SubmitOrderButtonProps) 
         },
         body: JSON.stringify({
           cart,
-          tableCode: siteConfig.defaultTableCode,
+          tableCode: readTableCode(),
         }),
       });
 

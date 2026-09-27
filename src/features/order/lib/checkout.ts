@@ -4,9 +4,29 @@ export type CartItem = {
   unitPrice: number;
 };
 
+import { siteConfig } from "@/config/site";
+
 export const CHECKOUT_CART_COOKIE_KEY = "restoflow-order-cart";
+export const TABLE_CODE_COOKIE_KEY = "restoflow-table-code";
 export const SERVICE_FEE = 6000;
 export const TAX_RATE = 0.11;
+
+export function readTableCode(): string {
+  if (typeof document === "undefined") {
+    return siteConfig.defaultTableCode;
+  }
+  const match = document.cookie.match(
+    new RegExp(`(^| )(${TABLE_CODE_COOKIE_KEY})=([^;]+)`),
+  );
+  return match?.[3] ?? siteConfig.defaultTableCode;
+}
+
+export function persistTableCode(tableCode: string) {
+  if (typeof window === "undefined") {
+    return;
+  }
+  document.cookie = `${TABLE_CODE_COOKIE_KEY}=${tableCode}; path=/; max-age=604800; samesite=lax`;
+}
 
 export function formatCurrency(value: number) {
   return new Intl.NumberFormat("id-ID", {

@@ -2,11 +2,11 @@
 
 import Script from "next/script";
 import { useMemo, useState } from "react";
-import { siteConfig } from "@/config/site";
 import {
   type CartItem,
   formatCurrency,
   getOrderSummary,
+  readTableCode,
 } from "@/features/order/lib/checkout";
 import {
   getPaymentMethodOption,
@@ -69,7 +69,7 @@ export function MidtransPayButton({
         },
         body: JSON.stringify({
           cart,
-          tableCode: siteConfig.defaultTableCode,
+          tableCode: readTableCode(),
           paymentMethodId: selectedMethod.id,
         }),
       });
