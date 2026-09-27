@@ -18,7 +18,8 @@ function getNumber(formData: FormData, key: string, fallback = 0) {
 }
 
 function getCheckbox(formData: FormData, key: string) {
-  return formData.get(key) === "on";
+  const value = formData.get(key);
+  return value === "on" || value === "true";
 }
 
 function ensureSlug(name: string, customSlug: string) {
