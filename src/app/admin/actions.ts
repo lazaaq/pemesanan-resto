@@ -100,6 +100,7 @@ function refreshAdminViews() {
   revalidatePath("/admin/custom-palette");
   revalidatePath("/admin/categories");
   revalidatePath("/admin/menus");
+  revalidatePath("/admin/tables");
   revalidatePath("/admin/login");
 }
 
@@ -376,5 +377,55 @@ export async function toggleCategoryActiveAction(formData: FormData) {
 
   if (error) throw error;
 
+  refreshAdminViews();
+}
+
+// ─── Dining Tables ───────────────────────────────────────────────────────────
+
+export async function createDiningTableAction(formData: FormData) {
+  const { restaurantId, supabase } = await getRestaurantId();
+  const code = getString(formData, "code");
+  const capacity = getNumber(formData, "capacity", 4);
+
+  const { error } = await supabase.from("dining_tables").insert({
+    restaurant_id: restaurantId,
+    code,
+    capacity,
+  });
+
+  if (error) throw error;
+  refreshAdminViews();
+}
+
+export async function updateDiningTableAction(formData: FormData) {
+  const { restaurantId, supabase } = await getRestaurantId();
+  const tableId = getString(formData, "tableId");
+  const code = getString(formData, "code");
+  const capacity = getNumber(formData, "capacity", 4);
+
+  const { error } = await supabase
+    .from("dining_tables")
+    .update({
+      code,
+      capacity,
+    })
+    .eq("restaurant_id", restaurantId)
+    .eq("id", tableId);
+
+  if (error) throw error;
+  refreshAdminViews();
+}
+
+export async function deleteDiningTableAction(formData: FormData) {
+  const { restaurantId, supabase } = await getRestaurantId();
+  const tableId = getString(formData, "tableId");
+
+  const { error } = await supabase
+    .from("dining_tables")
+    .delete()
+    .eq("restaurant_id", restaurantId)
+    .eq("id", tableId);
+
+  if (error) throw error;
   refreshAdminViews();
 }
