@@ -57,12 +57,12 @@ export default async function HomePage() {
         .eq("is_active", true)
         .order("sort_order", { ascending: true });
 
-    // Fetch menu items
+    // Fetch menu items (all — available first, unavailable at bottom per category)
     const { data: menuItems } = await supabase
         .from("menu_items")
         .select("id, name, slug, description, price, image_url, sort_order, is_available, is_featured")
         .eq("restaurant_id", restaurant.id)
-        .eq("is_available", true)
+        .order("is_available", { ascending: false })
         .order("sort_order", { ascending: true });
 
     // Fetch menu-item-category relations
