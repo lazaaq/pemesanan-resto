@@ -1,6 +1,7 @@
 'use client';
 
 import { type MouseEvent, useEffect, useRef, useState } from 'react';
+import { gsap } from 'gsap';
 import type { Route } from 'next';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Container } from '@/components/layout/container';
@@ -155,6 +156,75 @@ export function HomeShell({ initialCart = [], restaurantId, menuItems, categoryS
     const headerIsTransitioningRef = useRef(false);
     // Keep a mutable ref of the collapsed state so the scroll handler never stale-closes over old state
     const isScrolledRef = useRef(false);
+    const cartBarRef = useRef<HTMLDivElement>(null);
+
+    function flyToCart(img: HTMLElement | null) {
+        const cartIcon = document.getElementById('cart-icon');
+        if (!img || !cartIcon) return;
+
+        const imgRect = img.getBoundingClientRect();
+        const cartRect = cartIcon.getBoundingClientRect();
+
+        // wrapper: menangani clip (border-radius + overflow-hidden) secara statis,
+        // TIDAK ikut di-scale — jadi tidak kena bug compositing "radius hilang saat transform"
+        const wrapper = document.createElement('div');
+        wrapper.style.position = 'fixed';
+        wrapper.style.left = `${imgRect.left}px`;
+        wrapper.style.top = `${imgRect.top}px`;
+        wrapper.style.width = `${imgRect.width}px`;
+        wrapper.style.height = `${imgRect.height}px`;
+        wrapper.style.borderRadius = '1.2rem';
+        wrapper.style.overflow = 'hidden';
+        wrapper.style.zIndex = '10';
+        wrapper.style.pointerEvents = 'none';
+        wrapper.style.margin = '0';
+        wrapper.style.opacity = '0';
+        wrapper.style.transformOrigin = 'center center';
+        wrapper.style.willChange = 'transform, opacity';
+
+        // inner: cuma konten visual, ukuran mengikuti wrapper
+        const clone = img.cloneNode(true) as HTMLElement;
+        clone.style.width = '100%';
+        clone.style.height = '100%';
+        clone.style.objectFit = 'cover';
+        clone.style.display = 'block';
+        clone.style.margin = '0';
+        clone.style.borderRadius = '0'; // radius dipegang wrapper, bukan di sini
+
+        wrapper.appendChild(clone);
+        document.body.appendChild(wrapper);
+
+        const deltaX = cartRect.left + cartRect.width / 2 - imgRect.left - imgRect.width / 2;
+        const deltaY = cartRect.top + cartRect.height / 2 - imgRect.top - imgRect.height / 2;
+        const endScale = 16 / Math.max(imgRect.width, imgRect.height);
+
+        void wrapper.offsetWidth; // force reflow
+        wrapper.style.opacity = '1';
+
+        // Phase 1: whip up — animasikan wrapper, bukan clone
+        gsap.to(wrapper, {
+            y: deltaY * 0,
+            x: deltaX * 0,
+            scale: 1,
+            duration: 0.18,
+            ease: 'power3.out',
+        });
+
+        // Phase 2: arc ke cart icon, shrink jadi dot, fade
+        // borderRadius dianimasikan di wrapper — bukan lagi bermasalah karena
+        // wrapper juga yang menangani overflow-hidden clip-nya sendiri
+        gsap.to(wrapper, {
+            y: deltaY,
+            x: deltaX,
+            scale: endScale,
+            opacity: 0,
+            borderRadius: '50%',
+            duration: 0.5,
+            ease: 'power2.in',
+            delay: 0.18,
+            onComplete: () => wrapper.remove(),
+        });
+    }
 
     // Decode table code from base64 QR token (e.g. ?t=base64(restaurantId:tableCode))
     const encoded = searchParams.get('t');
@@ -183,7 +253,9 @@ export function HomeShell({ initialCart = [], restaurantId, menuItems, categoryS
     const menuSections = categorySections
         .map((section) => ({
             ...section,
-            items: filteredMenuItems.filter((item) => item.categories.some((cat) => cat === section.slug)),
+            items: filteredMenuItems
+                .filter((item) => item.categories.some((cat) => cat === section.slug))
+                .sort((a, b) => Number(b.is_available) - Number(a.is_available)),
         }))
         .filter((section) => section.items.length > 0);
 
@@ -286,7 +358,7 @@ export function HomeShell({ initialCart = [], restaurantId, menuItems, categoryS
         return cart.find((c) => c.name === itemName)?.quantity ?? 0;
     }
 
-    function handleAddOne(item: (typeof menuItems)[number]) {
+    function handleAddOne(item: (typeof menuItems)[number], thumbnail: HTMLElement | null) {
         setCart((current) => {
             const existing = current.find((c) => c.name === item.name);
             if (existing) {
@@ -296,6 +368,8 @@ export function HomeShell({ initialCart = [], restaurantId, menuItems, categoryS
         });
         // increment add-count to trigger qty-pop re-mount animation
         setAddCounts((prev) => ({ ...prev, [item.name]: (prev[item.name] ?? 0) + 1 }));
+        // Fly image to cart bar
+        flyToCart(thumbnail);
     }
 
     function handleRemoveOne(itemName: string) {
@@ -470,17 +544,21 @@ export function HomeShell({ initialCart = [], restaurantId, menuItems, categoryS
                                         {section.items.map((item) => {
                                             const cartQty = getCartQty(item.name);
                                             const inCart = cartQty > 0;
+                                            const isAvailable = item.is_available !== false;
 
                                             return (
                                                 <article
-                                                    key={`${section.slug}-${item.name}-${addCounts[item.name] ?? 0}`}
+                                                    key={`${section.slug}-${item.name}`}
                                                     className={`rounded-[1.6rem] border bg-white/85 p-4 shadow-sm transition-all hover:shadow-md ${
                                                         inCart ? 'border-primary/30 ring-1 ring-primary/10' : 'border-border'
-                                                    } ${(addCounts[item.name] ?? 0) > 0 ? 'card-flash' : ''}`}
+                                                    } ${!isAvailable ? 'grayscale opacity-60' : ''}`}
                                                 >
                                                     <div className="flex gap-3.5 items-start">
                                                         {/* Item thumbnail — real image from DB or gradient fallback */}
-                                                        <div className="shrink-0 w-32 aspect-square rounded-[1.2rem] overflow-hidden bg-linear-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                                                        <div
+                                                            data-menu-thumbnail
+                                                            className="shrink-0 w-32 aspect-square rounded-[1.2rem] overflow-hidden bg-linear-to-br from-primary/20 to-accent/20 flex items-center justify-center"
+                                                        >
                                                             {item.image_url ? (
                                                                 // eslint-disable-next-line @next/next/no-img-element
                                                                 <img src={item.image_url} alt={item.name} width={80} height={80} className="w-full h-full object-cover" />
@@ -522,8 +600,16 @@ export function HomeShell({ initialCart = [], restaurantId, menuItems, categoryS
                                                                         <button
                                                                             type="button"
                                                                             aria-label={`Tambah ${item.name}`}
-                                                                            onClick={() => handleAddOne(item)}
-                                                                            className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-sm font-bold text-white hover:bg-primary/90 active:scale-90 transition-transform"
+                                                                            onClick={(event) => {
+                                                                                const article = event.currentTarget.closest('article');
+                                                                                const thumbnail =
+                                                                                    article?.querySelector<HTMLImageElement>('img') ??
+                                                                                    article?.querySelector<HTMLElement>('[data-menu-thumbnail]') ??
+                                                                                    null;
+                                                                                handleAddOne(item, thumbnail);
+                                                                            }}
+                                                                            disabled={!isAvailable}
+                                                                            className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-sm font-bold text-white hover:bg-primary/90 active:scale-90 transition-transform disabled:cursor-not-allowed disabled:bg-muted"
                                                                         >
                                                                             +
                                                                         </button>
@@ -533,11 +619,29 @@ export function HomeShell({ initialCart = [], restaurantId, menuItems, categoryS
                                                                     <button
                                                                         type="button"
                                                                         aria-label={`Tambah ${item.name} ke pesanan`}
-                                                                        onClick={() => handleAddOne(item)}
-                                                                        className="flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 active:scale-95 transition-transform"
+                                                                        onClick={(event) => {
+                                                                            const article = event.currentTarget.closest('article');
+                                                                            const thumbnail =
+                                                                                article?.querySelector<HTMLImageElement>('img') ??
+                                                                                article?.querySelector<HTMLElement>('[data-menu-thumbnail]') ??
+                                                                                null;
+                                                                            handleAddOne(item, thumbnail);
+                                                                        }}
+                                                                        disabled={!isAvailable}
+                                                                        className={`flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-semibold shadow-sm transition-transform ${
+                                                                            isAvailable
+                                                                                ? 'bg-primary text-white hover:bg-primary/90 active:scale-95'
+                                                                                : 'cursor-not-allowed bg-muted/60 text-muted'
+                                                                        }`}
                                                                     >
-                                                                        <span className="text-base leading-none">+</span>
-                                                                        <span>Tambah</span>
+                                                                        {isAvailable ? (
+                                                                            <>
+                                                                                <span className="text-base leading-none">+</span>
+                                                                                <span>Tambah</span>
+                                                                            </>
+                                                                        ) : (
+                                                                            <span>Tidak tersedia</span>
+                                                                        )}
                                                                     </button>
                                                                 )}
                                                             </div>
@@ -590,6 +694,7 @@ export function HomeShell({ initialCart = [], restaurantId, menuItems, categoryS
                 {/* ── Floating Order Summary ──────────────────────────────────────── */}
                 <div
                     id="cart-bar"
+                    ref={cartBarRef}
                     className="sticky bottom-0 z-30 border-t border-border/60 bg-background/96 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl"
                 >
                     <Container>
@@ -598,7 +703,7 @@ export function HomeShell({ initialCart = [], restaurantId, menuItems, categoryS
                                 {/* Toggle header — always visible */}
                                 <button type="button" onClick={() => setCartExpanded((v) => !v)} className="flex w-full items-center gap-3 px-4 py-3.5 text-white">
                                     {/* Cart icon + badge */}
-                                    <div className="relative shrink-0">
+                                    <div id="cart-icon" className="relative shrink-0">
                                         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10">
                                             <IconCart />
                                         </div>
@@ -670,7 +775,7 @@ export function HomeShell({ initialCart = [], restaurantId, menuItems, categoryS
                         ) : (
                             /* Cart empty: minimal prompt */
                             <div className="flex items-center gap-3 rounded-[1.4rem] border border-dashed border-border/80 bg-white/50 px-4 py-3.5">
-                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-background text-muted">
+                                <div id="cart-icon" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-background text-muted">
                                     <IconCart />
                                 </div>
                                 <p className="text-sm text-muted">
