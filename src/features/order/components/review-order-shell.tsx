@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Container } from "@/components/layout/container";
 import { siteConfig } from "@/config/site";
 import { menuItems } from "@/features/home/data";
-import { SubmitOrderButton } from "@/features/order/components/submit-order-button";
+import { DuitkuPayButton } from "@/features/order/components/duitku-pay-button";
 import {
   type CartItem,
   formatCurrency,
@@ -11,7 +11,7 @@ import {
 
 const paymentRows = [
   { label: "Tipe pesanan", value: "Dine in" },
-  { label: "Payment", value: "Dinonaktifkan sementara" },
+  { label: "Payment", value: "Duitku" },
   { label: "Estimasi siap", value: "15 - 20 menit" },
 ];
 
@@ -181,7 +181,7 @@ export function ReviewOrderShell({ cart }: { cart: CartItem[] }) {
                   <p className="font-mono text-xs uppercase tracking-[0.3em] text-white/56">
                     final review
                   </p>
-                  <h3 className="mt-2 text-lg font-semibold">Siap kirim ke dapur</h3>
+                  <h3 className="mt-2 text-lg font-semibold">Siap lanjut ke pembayaran</h3>
                 </div>
                 <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/88">
                   {summary.totalItems} item
@@ -206,7 +206,7 @@ export function ReviewOrderShell({ cart }: { cart: CartItem[] }) {
                 >
                   Kembali ke menu
                 </Link>
-                <SubmitOrderButton cart={cart} orderRoute="/api/orders" />
+                <DuitkuPayButton cart={cart} paymentRoute={siteConfig.duitku.paymentRoute} />
               </div>
             </div>
           </Container>

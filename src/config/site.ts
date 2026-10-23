@@ -5,8 +5,8 @@ export const siteConfig = {
   url: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
   restaurantSlug: "restoflow-order",
   defaultTableCode: "A12",
-  midtrans: {
-    paymentRoute: "/api/payments/midtrans/token",
+  duitku: {
+    paymentRoute: "/api/payments/duitku/invoice",
   },
   navigation: [
     { href: "#category-best-seller", label: "Best Seller" },

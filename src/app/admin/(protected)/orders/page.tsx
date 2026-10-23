@@ -125,7 +125,7 @@ export default async function AdminOrdersPage() {
       <SectionHeader
         eyebrow="Order"
         title="Data Pemesanan"
-        description="Pantau pesanan yang dikirim user dari halaman checkout. Payment sementara masih dinonaktifkan untuk testing data masuk."
+        description="Pantau pesanan dan status pembayaran yang dikirim user dari halaman checkout."
       />
 
       {orders.length === 0 ? (
