@@ -4,6 +4,8 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   typedRoutes: true,
+  output: "standalone",
 };
 
 export default nextConfig;
+
