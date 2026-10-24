@@ -24,7 +24,12 @@ table_data(code, capacity) as (
   values
     ('A12', 4),
     ('A13', 4),
-    ('B01', 2)
+    ('B01', 2),
+    ('1', 4),
+    ('2', 4),
+    ('3', 4),
+    ('4', 4),
+    ('5', 4)
 )
 insert into public.dining_tables (restaurant_id, code, capacity)
 select target_restaurant.id, table_data.code, table_data.capacity

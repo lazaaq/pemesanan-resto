@@ -118,7 +118,13 @@ function IconChevronRight() {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function HomeShell({ initialCart = [] }: { initialCart?: CartItem[] }) {
+export function HomeShell({
+  initialCart = [],
+  tableCode,
+}: {
+  initialCart?: CartItem[];
+  tableCode: string;
+}) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [cart, setCart] = useState<CartItem[]>(initialCart);
@@ -223,7 +229,7 @@ export function HomeShell({ initialCart = [] }: { initialCart?: CartItem[] }) {
 
   function handleProceedToCheckout() {
     if (!cart.length) return;
-    router.push("/checkout/review" as Route);
+    router.push(`/checkout/review?table=${encodeURIComponent(tableCode)}` as Route);
   }
 
   // ── Render ──────────────────────────────────────────────────────────────────
@@ -260,7 +266,7 @@ export function HomeShell({ initialCart = [] }: { initialCart?: CartItem[] }) {
                   <div className="flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-white/70 px-3 py-1.5 shadow-sm">
                     <span className="text-xs text-muted">Meja</span>
                     <span className="text-xs font-semibold text-foreground">
-                      {siteConfig.defaultTableCode}
+                      {tableCode}
                     </span>
                   </div>
                 </div>

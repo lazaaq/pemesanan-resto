@@ -1,5 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
+import { siteConfig } from "@/config/site";
+import { sendPaymentSuccessEmail } from "@/lib/email/resend";
 import {
   createDuitkuCallbackSignature,
   getDuitkuServerConfig,
@@ -56,6 +58,10 @@ function getPaymentMetadata(metadata: Json) {
   return metadata as Record<string, Json>;
 }
 
+function getJsonString(value: Json | undefined) {
+  return typeof value === "string" ? value : "";
+}
+
 export async function POST(request: Request) {
   try {
     const payload = await readCallbackPayload(request);
@@ -110,6 +116,8 @@ export async function POST(request: Request) {
     }
 
     const isSuccessful = getStringValue(payload.resultCode) === "00";
+    const canMarkAsPaid = isSuccessful && order.payment_status === "unpaid";
+    const isAlreadyPaid = order.payment_status === "paid";
     const currentMetadata = getPaymentMetadata(order.metadata);
     const currentPayment =
       currentMetadata.payment &&
@@ -117,20 +125,33 @@ export async function POST(request: Request) {
       !Array.isArray(currentMetadata.payment)
         ? (currentMetadata.payment as Record<string, Json>)
         : {};
-    const nextMetadata = {
+    const currentNotifications =
+      currentMetadata.notifications &&
+      typeof currentMetadata.notifications === "object" &&
+      !Array.isArray(currentMetadata.notifications)
+        ? (currentMetadata.notifications as Record<string, Json>)
+        : {};
+    const currentPaymentNotification =
+      currentNotifications.payment &&
+      typeof currentNotifications.payment === "object" &&
+      !Array.isArray(currentNotifications.payment)
+        ? (currentNotifications.payment as Record<string, Json>)
+        : {};
+    const nextMetadataObject = {
       ...currentMetadata,
       payment: {
         ...currentPayment,
-        status: isSuccessful ? "paid" : "callback_received",
+        status: canMarkAsPaid || isAlreadyPaid ? "paid" : "callback_received",
         result_code: getStringValue(payload.resultCode) || null,
         payment_code: getStringValue(payload.paymentCode) || null,
         reference: getStringValue(payload.reference) || currentPayment.reference || null,
         settlement_date: getStringValue(payload.settlementDate) || null,
         callback_at: new Date().toISOString(),
       },
-    } as Json;
+    } as Record<string, Json>;
+    const nextMetadata = nextMetadataObject as Json;
 
-    const update = isSuccessful && order.payment_status !== "paid"
+    const update = canMarkAsPaid
       ? {
           payment_status: "paid" as const,
           paid_at: new Date().toISOString(),
@@ -145,6 +166,54 @@ export async function POST(request: Request) {
 
     if (updateError) {
       throw updateError;
+    }
+
+    const customerEmail = getJsonString(currentPayment.customer_email);
+    const paymentReference =
+      getStringValue(payload.reference) || getJsonString(currentPayment.reference);
+
+    if (
+      isSuccessful &&
+      (canMarkAsPaid || isAlreadyPaid) &&
+      customerEmail &&
+      getJsonString(currentPaymentNotification.status) !== "sent"
+    ) {
+      try {
+        const messageId = await sendPaymentSuccessEmail({
+          to: customerEmail,
+          orderId: order.id,
+          restaurantName: siteConfig.name,
+          total: Number(order.total),
+          reference: paymentReference,
+        });
+
+        const { error: notificationUpdateError } = await supabase
+          .from("orders")
+          .update({
+            metadata: {
+              ...nextMetadataObject,
+              notifications: {
+                ...currentNotifications,
+                payment: {
+                  status: "sent",
+                  message_id: messageId,
+                  sent_at: new Date().toISOString(),
+                },
+              },
+            },
+          })
+          .eq("id", order.id);
+
+        if (notificationUpdateError) {
+          throw notificationUpdateError;
+        }
+      } catch (error) {
+        console.error("Duitku payment success email error", error);
+
+        return new NextResponse("Payment recorded; email notification will be retried", {
+          status: 500,
+        });
+      }
     }
 
     revalidatePath("/admin");

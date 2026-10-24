@@ -15,7 +15,7 @@ const paymentRows = [
   { label: "Estimasi siap", value: "15 - 20 menit" },
 ];
 
-export function ReviewOrderShell({ cart }: { cart: CartItem[] }) {
+export function ReviewOrderShell({ cart, tableCode }: { cart: CartItem[]; tableCode: string }) {
   const summary = getOrderSummary(cart);
   const detailedItems = cart.map((cartItem) => {
     const menuItem = menuItems.find((item) => item.name === cartItem.name);
@@ -46,7 +46,7 @@ export function ReviewOrderShell({ cart }: { cart: CartItem[] }) {
               </div>
               <div className="rounded-2xl bg-white/80 px-3 py-2 text-right shadow-sm">
                 <p className="text-xs text-muted">Meja</p>
-                <p className="text-sm font-semibold text-foreground">{siteConfig.defaultTableCode}</p>
+                <p className="text-sm font-semibold text-foreground">{tableCode}</p>
               </div>
             </div>
           </Container>
@@ -191,7 +191,7 @@ export function ReviewOrderShell({ cart }: { cart: CartItem[] }) {
               <div className="mt-5 space-y-2 rounded-[1.4rem] bg-white/7 p-4">
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-sm text-white/64">Nomor meja</p>
-                  <p className="text-sm font-semibold text-white">{siteConfig.defaultTableCode}</p>
+                  <p className="text-sm font-semibold text-white">{tableCode}</p>
                 </div>
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-sm text-white/64">Total pembayaran</p>
@@ -206,7 +206,7 @@ export function ReviewOrderShell({ cart }: { cart: CartItem[] }) {
                 >
                   Kembali ke menu
                 </Link>
-                <DuitkuPayButton cart={cart} paymentRoute={siteConfig.duitku.paymentRoute} />
+                <DuitkuPayButton cart={cart} paymentRoute={siteConfig.duitku.paymentRoute} tableCode={tableCode} />
               </div>
             </div>
           </Container>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { siteConfig } from "@/config/site";
 import {
   type CartItem,
   formatCurrency,
@@ -11,9 +10,10 @@ import {
 type DuitkuPayButtonProps = {
   cart: CartItem[];
   paymentRoute: string;
+  tableCode: string;
 };
 
-export function DuitkuPayButton({ cart, paymentRoute }: DuitkuPayButtonProps) {
+export function DuitkuPayButton({ cart, paymentRoute, tableCode }: DuitkuPayButtonProps) {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -40,7 +40,7 @@ export function DuitkuPayButton({ cart, paymentRoute }: DuitkuPayButtonProps) {
         },
         body: JSON.stringify({
           cart,
-          tableCode: siteConfig.defaultTableCode,
+          tableCode,
           email,
         }),
       });

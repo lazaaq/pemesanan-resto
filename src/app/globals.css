@@ -172,8 +172,8 @@ button {
   left: 0;
   width: var(--admin-sidebar-w);
   height: 100dvh;
-  background: #fff;
-  border-right: 1px solid var(--admin-border);
+  background: linear-gradient(180deg, #093fb4 0%, #062a7b 100%);
+  border-right: 1px solid rgba(255, 255, 255, 0.16);
   display: flex;
   flex-direction: column;
   z-index: 40;
@@ -227,17 +227,17 @@ button {
   border-radius: 0.625rem;
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--admin-muted);
+  color: rgba(255, 255, 255, 0.72);
   text-decoration: none;
   transition: background 150ms ease, color 150ms ease;
 }
 .admin-nav-link:hover {
-  background: #f1f5f9;
-  color: var(--admin-foreground);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
 }
 .admin-nav-link.active {
-  background: #eff4ff;
-  color: var(--admin-primary);
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
   font-weight: 600;
 }
 

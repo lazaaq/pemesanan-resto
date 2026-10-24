@@ -2,6 +2,8 @@ import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { siteConfig } from "@/config/site";
 import { type CartItem, getOrderSummary } from "@/features/order/lib/checkout";
+import { getTableCode } from "@/features/order/lib/tables";
+import { sendInvoiceEmail } from "@/lib/email/resend";
 import {
   createDuitkuInvoiceSignature,
   getDuitkuCreateInvoiceUrl,
@@ -76,10 +78,7 @@ export async function POST(request: Request) {
     const body = (await request.json()) as CreateDuitkuInvoiceBody;
     const cart = sanitizeCart(body.cart);
     const email = getSafeEmail(body.email);
-    const tableCode =
-      typeof body.tableCode === "string" && body.tableCode.trim()
-        ? body.tableCode.trim().slice(0, 20)
-        : siteConfig.defaultTableCode;
+    const tableCode = getTableCode(body.tableCode, siteConfig.defaultTableCode);
 
     if (!cart.length) {
       return NextResponse.json(
@@ -284,6 +283,42 @@ export async function POST(request: Request) {
       );
     }
 
+    let invoiceEmailNotification: {
+      status: string;
+      attempted_at: string;
+      message_id?: string;
+    } = {
+      status: "failed",
+      attempted_at: new Date().toISOString(),
+    };
+
+    try {
+      const messageId = await sendInvoiceEmail({
+        to: email,
+        orderId: createdOrderId,
+        restaurantName: siteConfig.name,
+        tableCode,
+        items: pricedCart.map((item) => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.unitPrice,
+        })),
+        subtotal: orderSummary.subtotal,
+        serviceFee: orderSummary.serviceFee,
+        tax: orderSummary.tax,
+        total: orderSummary.total,
+        paymentUrl: result.paymentUrl,
+      });
+
+      invoiceEmailNotification = {
+        status: "sent",
+        attempted_at: new Date().toISOString(),
+        message_id: messageId,
+      };
+    } catch (error) {
+      console.error("Duitku invoice email error", error);
+    }
+
     await supabase
       .from("orders")
       .update({
@@ -295,6 +330,9 @@ export async function POST(request: Request) {
             status: "invoice_created",
             reference: result.reference,
             gateway_status_code: result.statusCode,
+          },
+          notifications: {
+            invoice: invoiceEmailNotification,
           },
         },
       })
