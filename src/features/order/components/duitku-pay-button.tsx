@@ -16,7 +16,7 @@ type DuitkuPayButtonProps = {
 export function DuitkuPayButton({ cart, paymentRoute, tableCode }: DuitkuPayButtonProps) {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ type: "error" | "info"; text: string } | null>(null);
   const summary = useMemo(() => getOrderSummary(cart), [cart]);
 
   async function handlePayment() {
@@ -25,7 +25,14 @@ export function DuitkuPayButton({ cart, paymentRoute, tableCode }: DuitkuPayButt
     }
 
     if (!email.trim()) {
-      setMessage("Email pelanggan wajib diisi untuk membuat pembayaran Duitku.");
+      setMessage({ type: "error", text: "Email wajib diisi untuk melanjutkan pembayaran." });
+      return;
+    }
+
+    // Basic email format check
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      setMessage({ type: "error", text: "Format email tidak valid. Cek kembali alamat email Anda." });
       return;
     }
 
@@ -55,55 +62,100 @@ export function DuitkuPayButton({ cart, paymentRoute, tableCode }: DuitkuPayButt
 
       window.location.assign(result.paymentUrl);
     } catch (error) {
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "Terjadi kesalahan saat membuka pembayaran Duitku.",
-      );
+      setMessage({
+        type: "error",
+        text:
+          error instanceof Error
+            ? error.message
+            : "Terjadi kesalahan saat membuka pembayaran Duitku.",
+      });
       setIsLoading(false);
     }
   }
 
   return (
     <div className="space-y-3">
-      <div className="rounded-[1.4rem] bg-white/7 p-4">
-        <p className="font-mono text-xs uppercase tracking-[0.28em] text-white/56">
-          data pembayaran
+      {/* Email input */}
+      <div>
+        <label
+          htmlFor="duitku-email"
+          className="mb-1.5 block text-xs font-semibold text-white/80"
+        >
+          Email pelanggan{" "}
+          <span className="text-accent font-bold">*</span>
+        </label>
+        <p className="mb-2 text-[11px] leading-relaxed text-white/50">
+          Dipakai Duitku untuk notifikasi status transaksi Anda.
         </p>
-        <p className="mt-2 text-sm leading-6 text-white/72">
-          Email dipakai Duitku untuk kebutuhan transaksi dan notifikasi pembayaran.
-        </p>
-        <div className="mt-4 grid gap-3">
-          <label className="grid gap-1.5 text-xs font-semibold text-white/80">
-            Email pelanggan <span className="text-accent">wajib</span>
-            <input
-              className="rounded-xl border border-white/12 bg-white/8 px-3 py-2.5 text-sm font-normal text-white outline-none placeholder:text-white/35 focus:border-accent"
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="nama@email.com"
-              autoComplete="email"
-              maxLength={255}
-            />
-          </label>
-        </div>
+        <input
+          id="duitku-email"
+          type="email"
+          value={email}
+          onChange={(event) => {
+            setEmail(event.target.value);
+            if (message?.type === "error") setMessage(null);
+          }}
+          placeholder="nama@email.com"
+          autoComplete="email"
+          maxLength={255}
+          className={`w-full rounded-xl border px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 transition-colors bg-white/8 ${message?.type === "error"
+              ? "border-red-400/60 focus:border-red-400"
+              : "border-white/15 focus:border-accent/70 focus:bg-white/12"
+            }`}
+        />
+
+        {/* Feedback message */}
+        {message && (
+          <p
+            className={`mt-2 text-xs leading-relaxed ${message.type === "error" ? "text-red-300" : "text-white/60"
+              }`}
+            role={message.type === "error" ? "alert" : "status"}
+          >
+            {message.text}
+          </p>
+        )}
       </div>
 
+      {/* Pay button */}
       <button
-        className="w-full rounded-full bg-accent px-5 py-3.5 text-sm font-semibold text-[#3d250f] disabled:cursor-not-allowed disabled:opacity-50"
+        id="duitku-pay-btn"
         type="button"
         disabled={!cart.length || isLoading}
         onClick={handlePayment}
+        className="w-full rounded-full bg-accent px-5 py-3.5 text-sm font-bold text-[#3d250f] shadow-md hover:bg-accent/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 transition-all"
       >
-        {isLoading
-          ? "Menyiapkan pembayaran..."
-          : `Bayar via Duitku ${formatCurrency(summary.total)}`}
+        {isLoading ? (
+          <span className="flex items-center justify-center gap-2">
+            <svg
+              className="h-4 w-4 animate-spin"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+              />
+            </svg>
+            Menyiapkan pembayaran…
+          </span>
+        ) : (
+          `Bayar via Duitku · ${formatCurrency(summary.total)}`
+        )}
       </button>
 
-      {message ? (
-        <p className="text-center text-xs leading-6 text-white/72">{message}</p>
-      ) : (
-        <p className="text-center text-xs leading-6 text-white/56">
+      {!message && (
+        <p className="text-center text-[11px] text-white/45">
           Anda akan diarahkan ke halaman pembayaran Duitku.
         </p>
       )}

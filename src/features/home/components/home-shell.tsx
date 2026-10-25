@@ -86,7 +86,8 @@ function IconLogo() {
       strokeWidth="2.5"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="h-7 w-7 text-primary"
+      className="h-5 w-5 text-primary"
+      aria-hidden="true"
     >
       <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
       <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
@@ -116,6 +117,131 @@ function IconChevronRight() {
   );
 }
 
+function IconChevronUp() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <polyline points="18 15 12 9 6 15" />
+    </svg>
+  );
+}
+
+function IconChevronDown() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
+}
+
+// ─── Menu Card ────────────────────────────────────────────────────────────────
+
+function MenuCard({
+  item,
+  cartQty,
+  flashKey,
+  onAdd,
+  onRemove,
+}: {
+  item: (typeof menuItems)[number];
+  cartQty: number;
+  flashKey: number;
+  onAdd: () => void;
+  onRemove: () => void;
+}) {
+  const inCart = cartQty > 0;
+
+  return (
+    <article
+      className={`menu-card rounded-2xl border bg-white/90 shadow-sm transition-shadow hover:shadow-md ${inCart ? "border-primary/25 ring-1 ring-primary/10" : "border-border"
+        } ${flashKey > 0 ? "card-flash" : ""}`}
+    >
+      <div className="flex gap-3 p-3.5">
+        {/* Thumbnail */}
+        <div
+          className={`h-[88px] w-[72px] shrink-0 rounded-xl bg-gradient-to-br ${item.accent}`}
+          aria-hidden="true"
+        />
+
+        {/* Info */}
+        <div className="min-w-0 flex-1 flex flex-col justify-between py-0.5">
+          <div>
+            <h4 className="text-sm font-semibold leading-snug text-foreground">
+              {item.name}
+            </h4>
+            <p className="mt-1 text-xs leading-relaxed text-muted line-clamp-2">
+              {item.description}
+            </p>
+          </div>
+
+          {/* Price + stepper row */}
+          <div className="mt-2 flex items-center justify-between gap-2">
+            <span className="text-sm font-bold text-primary">{item.price}</span>
+
+            {inCart ? (
+              <div className="flex items-center gap-0.5 rounded-full border border-border bg-white px-1 py-1 shadow-sm">
+                <button
+                  type="button"
+                  aria-label={`Kurangi ${item.name}`}
+                  onClick={onRemove}
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-base font-bold text-muted hover:bg-background hover:text-foreground transition-colors"
+                >
+                  −
+                </button>
+                <span
+                  key={flashKey}
+                  className="qty-pop min-w-[1.75rem] text-center text-sm font-bold text-foreground"
+                >
+                  {cartQty}
+                </span>
+                <button
+                  type="button"
+                  aria-label={`Tambah ${item.name}`}
+                  onClick={onAdd}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-base font-bold text-white hover:bg-primary/90 active:scale-90 transition-transform"
+                >
+                  +
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                aria-label={`Tambah ${item.name} ke pesanan`}
+                onClick={onAdd}
+                className="flex min-h-[2.25rem] items-center gap-1 rounded-full bg-primary px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-primary/90 active:scale-95 transition-transform"
+              >
+                <span className="text-sm leading-none">+</span>
+                <span>Tambah</span>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function HomeShell({
@@ -130,8 +256,7 @@ export function HomeShell({
   const [cart, setCart] = useState<CartItem[]>(initialCart);
   const [activeCategory, setActiveCategory] = useState<string>("");
   const [cartExpanded, setCartExpanded] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-  // tracks how many times each item has been added — used as a re-mount key
+  // tracks add counts per item — used only as animation key, NOT as React key
   const [addCounts, setAddCounts] = useState<Record<string, number>>({});
   const pillNavRef = useRef<HTMLDivElement>(null);
 
@@ -158,13 +283,6 @@ export function HomeShell({
     persistCart(cart);
   }, [cart]);
 
-  useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 60);
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   // Initialise active category when sections first become available
   const firstSectionSlug = menuSections[0]?.slug ?? "";
   if (!activeCategory && firstSectionSlug) {
@@ -189,7 +307,7 @@ export function HomeShell({
           pill?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
         }
       },
-      { threshold: 0.25, rootMargin: "-120px 0px -40% 0px" },
+      { threshold: 0.2, rootMargin: "-110px 0px -40% 0px" },
     );
 
     sections.forEach((el) => el && observer.observe(el));
@@ -212,7 +330,6 @@ export function HomeShell({
       }
       return [...current, { name: item.name, quantity: 1, unitPrice: item.priceValue }];
     });
-    // increment add-count to trigger qty-pop re-mount animation
     setAddCounts((prev) => ({ ...prev, [item.name]: (prev[item.name] ?? 0) + 1 }));
   }
 
@@ -235,49 +352,35 @@ export function HomeShell({
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="bg-white py-0 sm:px-6">
+    <div className="bg-white sm:py-0 sm:px-6">
       <div className="mobile-app-shell mx-auto flex min-h-screen w-full max-w-[576px] flex-col bg-background sm:rounded-b-[2rem] sm:border sm:border-border sm:shadow-[0_24px_90px_rgba(20,44,30,0.14)]">
 
         {/* ── Sticky Header ──────────────────────────────────────────────── */}
-        <header className="sticky top-0 z-30 border-b border-border/70 bg-background/94 backdrop-blur-xl">
-          <Container className={`transition-all duration-300 ease-in-out ${isScrolled ? "py-2" : "py-3.5"}`}>
+        <header className="sticky top-0 z-30 border-b border-border/70 bg-background/96 backdrop-blur-xl">
+          <Container className="py-3">
 
-            {/* Collapsible Top row — CSS grid 0fr/1fr trick for silky-smooth animation */}
-            <div
-              className={`grid transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                isScrolled
-                  ? "grid-rows-[0fr] opacity-0 pointer-events-none mb-0"
-                  : "grid-rows-[1fr] opacity-100 mb-3"
-              }`}
-            >
-              <div className="min-h-0 overflow-hidden">
-                <div className="flex items-start justify-between gap-4 pb-1">
-                  <div className="space-y-1">
-                    <div className="flex items-center">
-                      <IconLogo />
-                    </div>
-                    <h1 className="text-xl font-bold tracking-tight text-foreground">
-                      {siteConfig.name}
-                    </h1>
-                    <p className="max-w-[340px] text-xs leading-relaxed text-muted">
-                      Aplikasi pemesanan menu makanan dan minuman favorit Anda secara langsung di cafe atau restoran ini.
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-white/70 px-3 py-1.5 shadow-sm">
-                    <span className="text-xs text-muted">Meja</span>
-                    <span className="text-xs font-semibold text-foreground">
-                      {tableCode}
-                    </span>
-                  </div>
+            {/* Top row: logo + app name + table badge */}
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10">
+                  <IconLogo />
                 </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold leading-tight text-foreground truncate">
+                    {siteConfig.name}
+                  </p>
+                  <p className="text-[11px] text-muted leading-tight">Dine in · Pesan di sini</p>
+                </div>
+              </div>
+              <div className="flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-white px-3 py-1.5 shadow-sm">
+                <span className="text-[11px] text-muted">Meja</span>
+                <span className="text-sm font-bold text-foreground">{tableCode}</span>
               </div>
             </div>
 
-            {/* Search bar — compact single row */}
+            {/* Search bar */}
             <label
-              className={`flex items-center gap-2.5 rounded-full border border-border bg-white/70 px-4 py-2.5 shadow-sm focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-ring transition-all duration-300 ${
-                isScrolled ? "mt-0" : "mt-1"
-              }`}
+              className="flex items-center gap-2.5 rounded-full border border-border bg-white px-4 py-2.5 shadow-sm focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-ring transition-all"
               htmlFor="menu-search"
             >
               <span className="shrink-0 text-muted">
@@ -288,14 +391,14 @@ export function HomeShell({
                 type="search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari menu, kategori, atau minuman…"
-                className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted/70"
+                placeholder="Cari nama menu atau kategori…"
+                className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted/60"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
-                  className="shrink-0 rounded-full p-0.5 text-muted hover:text-foreground"
+                  className="shrink-0 flex h-5 w-5 items-center justify-center rounded-full bg-border/60 text-muted hover:bg-border hover:text-foreground transition-colors"
                   aria-label="Hapus pencarian"
                 >
                   <IconX />
@@ -303,11 +406,11 @@ export function HomeShell({
               )}
             </label>
 
-            {/* Category pill nav with scroll hint */}
-            <div className={`scroll-hint-right transition-all duration-300 ${isScrolled ? "mt-2" : "mt-3"}`}>
+            {/* Category pill nav */}
+            <div className="scroll-hint-right mt-2.5">
               <nav
                 ref={pillNavRef}
-                className="no-scrollbar flex gap-2 overflow-x-auto pr-10 pb-0.5"
+                className="no-scrollbar flex gap-2 overflow-x-auto pb-0.5 pr-10"
                 aria-label="Navigasi kategori"
               >
                 {menuSections.map((section) => {
@@ -318,11 +421,10 @@ export function HomeShell({
                       data-slug={section.slug}
                       href={`#category-${section.slug}`}
                       onClick={() => setActiveCategory(section.slug)}
-                      className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all ${
-                        isActive
-                          ? "bg-primary text-white shadow-sm"
-                          : "border border-border bg-white/70 text-foreground hover:border-primary/40 hover:bg-white"
-                      }`}
+                      className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${isActive
+                        ? "bg-primary text-white shadow-sm"
+                        : "border border-border bg-white text-muted hover:border-primary/30 hover:text-foreground"
+                        }`}
                     >
                       {section.label}
                     </a>
@@ -335,192 +437,131 @@ export function HomeShell({
         </header>
 
         {/* ── Main content ───────────────────────────────────────────────── */}
-        <main className="flex-1 pb-32">
-
-          {/* Menu subtitle */}
-          <section className="pt-6">
-            <Container>
-              <div className="flex items-baseline justify-between gap-4">
-                <h2 className="text-2xl font-bold tracking-tight text-foreground">Menu</h2>
-                <span className="text-xs text-muted">
-                  {filteredMenuItems.length} item
-                  {normalizedQuery ? ` untuk "${searchQuery.trim()}"` : ""}
-                </span>
-              </div>
-            </Container>
-          </section>
+        <main className="flex-1 pb-36">
 
           {/* Category sections */}
           {menuSections.length ? (
-            menuSections.map((section) => (
-              <section
-                key={section.slug}
-                id={`category-${section.slug}`}
-                className="scroll-mt-[148px] pt-5"
-              >
-                <Container className="space-y-3">
-                  {/* Section header */}
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground">
-                      {section.label}
-                    </h3>
-                    <p className="mt-0.5 text-xs leading-relaxed text-muted">
-                      {section.description}
-                    </p>
-                  </div>
-
-                  {/* Menu cards */}
-                  <div className="grid gap-3">
-                    {section.items.map((item) => {
-                      const cartQty = getCartQty(item.name);
-                      const inCart = cartQty > 0;
-
-                      return (
-                        <article
-                          key={`${section.slug}-${item.name}-${addCounts[item.name] ?? 0}`}
-                          className={`rounded-[1.6rem] border bg-white/85 p-4 shadow-sm transition-all hover:shadow-md ${
-                            inCart
-                              ? "border-primary/30 ring-1 ring-primary/10"
-                              : "border-border"
-                          } ${
-                            (addCounts[item.name] ?? 0) > 0 ? "card-flash" : ""
-                          }`}
-                        >
-                          <div className="flex gap-3.5">
-                            {/* Item gradient thumbnail */}
-                            <div
-                              className={`h-24 w-20 shrink-0 rounded-[1.2rem] bg-gradient-to-br ${item.accent}`}
-                            />
-
-                            {/* Item info */}
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-start justify-between gap-2">
-                                <h4 className="text-base font-semibold leading-snug text-foreground">
-                                  {item.name}
-                                </h4>
-                                <span className="shrink-0 rounded-full bg-primary/8 px-2.5 py-1 text-xs font-semibold text-primary">
-                                  {item.price}
-                                </span>
-                              </div>
-                              <p className="mt-1.5 text-xs leading-relaxed text-muted line-clamp-2">
-                                {item.description}
-                              </p>
-
-                              {/* Add / stepper control */}
-                              <div className="mt-3 flex items-center justify-end">
-                                {inCart ? (
-                                  /* Inline stepper */
-                                  <div className="flex items-center gap-0.5 rounded-full border border-border bg-white/90 px-1 py-1 shadow-sm">
-                                    <button
-                                      type="button"
-                                      aria-label={`Kurangi ${item.name}`}
-                                      onClick={() => handleRemoveOne(item.name)}
-                                      className="flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold text-muted hover:bg-background hover:text-foreground"
-                                    >
-                                      −
-                                    </button>
-                                    {/* Re-keying on addCounts triggers qty-pop animation */}
-                                    <span
-                                      key={addCounts[item.name] ?? 0}
-                                      className="qty-pop min-w-6 text-center text-sm font-semibold text-foreground"
-                                    >
-                                      {cartQty}
-                                    </span>
-                                    <button
-                                      type="button"
-                                      aria-label={`Tambah ${item.name}`}
-                                      onClick={() => handleAddOne(item)}
-                                      className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-sm font-bold text-white hover:bg-primary/90 active:scale-90 transition-transform"
-                                    >
-                                      +
-                                    </button>
-                                  </div>
-                                ) : (
-                                  /* Single-tap add button with "Tambah" label */
-                                  <button
-                                    type="button"
-                                    aria-label={`Tambah ${item.name} ke pesanan`}
-                                    onClick={() => handleAddOne(item)}
-                                    className="flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 active:scale-95 transition-transform"
-                                  >
-                                    <span className="text-base leading-none">+</span>
-                                    <span>Tambah</span>
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </article>
-                      );
-                    })}
+            <>
+              {/* Item count */}
+              <div className="pt-5 pb-1">
+                <Container>
+                  <div className="flex items-baseline justify-between gap-3">
+                    <h1 className="text-lg font-bold tracking-tight text-foreground">Menu</h1>
+                    <span className="text-xs text-muted">
+                      {filteredMenuItems.length} item
+                      {normalizedQuery ? ` untuk "${searchQuery.trim()}"` : ""}
+                    </span>
                   </div>
                 </Container>
-              </section>
-            ))
+              </div>
+
+              {menuSections.map((section) => (
+                <section
+                  key={section.slug}
+                  id={`category-${section.slug}`}
+                  className="scroll-mt-[130px] pt-5"
+                >
+                  <Container className="space-y-3">
+                    {/* Section header */}
+                    <div className="flex items-baseline gap-2">
+                      <h2 className="text-base font-bold text-foreground">{section.label}</h2>
+                      <span className="text-xs text-muted">
+                        {section.items.length} item
+                      </span>
+                    </div>
+
+                    {/* Menu cards */}
+                    <div className="grid gap-2.5">
+                      {section.items.map((item) => {
+                        const cartQty = getCartQty(item.name);
+                        const flashKey = addCounts[item.name] ?? 0;
+
+                        return (
+                          <MenuCard
+                            key={item.name}
+                            item={item}
+                            cartQty={cartQty}
+                            flashKey={flashKey}
+                            onAdd={() => handleAddOne(item)}
+                            onRemove={() => handleRemoveOne(item.name)}
+                          />
+                        );
+                      })}
+                    </div>
+                  </Container>
+                </section>
+              ))}
+
+              {/* Bottom checkout cue */}
+              <div className="pt-8 pb-4">
+                <Container>
+                  <div className="rounded-2xl border border-border/60 bg-white/60 p-4 text-center">
+                    <p className="text-xs text-muted mb-3">
+                      Sudah selesai memilih? Tinjau pesanan sebelum checkout.
+                    </p>
+                    <button
+                      type="button"
+                      disabled={cart.length === 0}
+                      onClick={handleProceedToCheckout}
+                      className="flex w-full items-center justify-center gap-1.5 rounded-full bg-primary py-3.5 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all shadow-sm"
+                    >
+                      Lanjut ke Checkout
+                      <IconChevronRight />
+                    </button>
+                  </div>
+                </Container>
+              </div>
+            </>
           ) : (
-            <section className="pt-6">
+            <div className="pt-6">
               <Container>
-                <div className="rounded-[1.6rem] border border-dashed border-border bg-white/60 p-8 text-center">
-                  <p className="text-2xl">🔍</p>
-                  <h4 className="mt-3 text-base font-semibold text-foreground">
+                <div className="rounded-2xl border border-dashed border-border bg-white/70 p-8 text-center">
+                  <p className="text-3xl mb-3" aria-hidden="true">🔍</p>
+                  <h2 className="text-base font-semibold text-foreground">
                     Menu tidak ditemukan
-                  </h4>
+                  </h2>
                   <p className="mt-1.5 text-sm leading-relaxed text-muted">
-                    Coba kata kunci lain, misalnya nama menu, kategori, atau jenis minuman.
+                    Coba kata kunci lain, misalnya nama menu atau kategori.
                   </p>
                   <button
                     type="button"
                     onClick={() => setSearchQuery("")}
-                    className="mt-4 rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/15"
+                    className="mt-4 rounded-full bg-primary/10 px-5 py-2.5 text-sm font-semibold text-primary hover:bg-primary/15 transition-colors"
                   >
                     Lihat semua menu
                   </button>
                 </div>
               </Container>
-            </section>
+            </div>
           )}
-          {/* Separation and Bottom Checkout Button */}
-          <div className="mt-8 border-t border-border/80 pt-8 pb-4">
-            <Container>
-              <div className="rounded-[1.6rem] bg-white/40 p-5 text-center border border-border/50 shadow-sm backdrop-blur-sm">
-                <p className="text-xs text-muted mb-3.5">
-                  Sudah selesai memilih? Tinjau kembali pesanan Anda sebelum melakukan checkout.
-                </p>
-                <button
-                  type="button"
-                  disabled={cart.length === 0}
-                  onClick={handleProceedToCheckout}
-                  className="flex w-full items-center justify-center gap-1.5 rounded-full bg-primary py-3.5 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-all shadow-md"
-                >
-                  Lanjut ke Checkout
-                  <IconChevronRight />
-                </button>
-              </div>
-            </Container>
-          </div>
         </main>
 
-        {/* ── Floating Order Summary ──────────────────────────────────────── */}
+        {/* ── Sticky Cart Bar ──────────────────────────────────────────── */}
         <div
           id="cart-bar"
-          className="sticky bottom-0 z-30 border-t border-border/60 bg-background/96 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl"
+          className="sticky bottom-0 z-30 border-t border-border/50 bg-background/97 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2.5 backdrop-blur-xl"
         >
           <Container>
             {cart.length > 0 ? (
-              <div className="overflow-hidden rounded-[1.6rem] bg-[#1a2e24] shadow-[0_8px_40px_rgba(20,44,30,0.30)]">
+              <div className="overflow-hidden rounded-2xl bg-[#1a2e24]">
 
                 {/* Toggle header — always visible */}
                 <button
                   type="button"
                   onClick={() => setCartExpanded((v) => !v)}
-                  className="flex w-full items-center gap-3 px-4 py-3.5 text-white"
+                  className="flex w-full items-center gap-3 px-4 py-3 text-white"
+                  aria-expanded={cartExpanded}
+                  aria-controls="cart-detail-panel"
                 >
                   {/* Cart icon + badge */}
                   <div className="relative shrink-0">
                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10">
                       <IconCart />
                     </div>
-                    <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-[#1a1f1c]">
+                    <span
+                      className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-[#1a1f1c]"
+                      aria-label={`${totalCartItems} item di keranjang`}
+                    >
                       {totalCartItems > 9 ? "9+" : totalCartItems}
                     </span>
                   </div>
@@ -528,24 +569,20 @@ export function HomeShell({
                   {/* Summary */}
                   <div className="min-w-0 flex-1 text-left">
                     <p className="text-[11px] font-medium text-white/55">
-                      {totalCartItems} item · ketuk untuk lihat detail
+                      {totalCartItems} item · {cart.length} menu dipilih
                     </p>
-                    <p className="text-sm font-semibold text-white">{formatCurrency(subtotal)}</p>
+                    <p className="text-sm font-bold text-white">{formatCurrency(subtotal)}</p>
                   </div>
 
                   {/* Expand chevron */}
-                  <span
-                    className={`shrink-0 text-white/60 transition-transform duration-200 ${
-                      cartExpanded ? "rotate-90" : "-rotate-90"
-                    }`}
-                  >
-                    <IconChevronRight />
+                  <span className="shrink-0 text-white/60 transition-transform duration-200">
+                    {cartExpanded ? <IconChevronDown /> : <IconChevronUp />}
                   </span>
                 </button>
 
                 {/* Expanded detail panel */}
                 {cartExpanded && (
-                  <div className="border-t border-white/10 px-4 pb-4 pt-3">
+                  <div id="cart-detail-panel" className="border-t border-white/10 px-4 pb-4 pt-3">
                     {/* Item list */}
                     <div className="space-y-2.5">
                       {cart.map((item) => (
@@ -562,7 +599,7 @@ export function HomeShell({
                     </div>
 
                     {/* Price breakdown */}
-                    <div className="mt-4 space-y-1.5 rounded-[1rem] bg-white/7 px-3.5 py-3">
+                    <div className="mt-3.5 rounded-xl bg-white/8 px-3.5 py-3 space-y-1.5">
                       <div className="flex items-center justify-between gap-3">
                         <p className="text-xs text-white/55">Subtotal</p>
                         <p className="text-xs font-semibold text-white">{formatCurrency(subtotal)}</p>
@@ -575,7 +612,7 @@ export function HomeShell({
                         <p className="text-xs text-white/55">Pajak (11%)</p>
                         <p className="text-xs font-semibold text-white">{formatCurrency(tax)}</p>
                       </div>
-                      <div className="mt-2 flex items-center justify-between gap-3 border-t border-white/10 pt-2">
+                      <div className="flex items-center justify-between gap-3 border-t border-white/10 pt-1.5">
                         <p className="text-sm font-semibold text-white">Total</p>
                         <p className="text-sm font-bold text-accent">{formatCurrency(total)}</p>
                       </div>
@@ -585,7 +622,7 @@ export function HomeShell({
                     <button
                       type="button"
                       onClick={handleProceedToCheckout}
-                      className="mt-3.5 flex w-full items-center justify-center gap-1.5 rounded-full bg-accent py-3 text-sm font-semibold text-[#1a1f1c] hover:bg-accent/90 active:scale-[0.98]"
+                      className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-full bg-accent py-3 text-sm font-bold text-[#1a1f1c] hover:bg-accent/90 active:scale-[0.98] transition-all"
                     >
                       Lanjut ke Checkout
                       <IconChevronRight />
@@ -594,14 +631,15 @@ export function HomeShell({
                 )}
               </div>
             ) : (
-              /* Cart empty: minimal prompt */
-              <div className="flex items-center gap-3 rounded-[1.4rem] border border-dashed border-border/80 bg-white/50 px-4 py-3.5">
+              /* Cart empty */
+              <div className="flex items-center gap-3 rounded-2xl border border-dashed border-border/70 bg-white/50 px-4 py-3.5">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-background text-muted">
                   <IconCart />
                 </div>
                 <p className="text-sm text-muted">
                   Belum ada pesanan. Ketuk{" "}
-                  <span className="font-semibold text-foreground">Tambah</span> di menu untuk mulai.
+                  <span className="font-semibold text-foreground">Tambah</span>{" "}
+                  di menu untuk mulai.
                 </p>
               </div>
             )}
