@@ -7,8 +7,6 @@ export function getTableCode(value: unknown, fallback = "A12") {
     return fallback;
   }
 
-  const normalized = value.trim().toUpperCase();
-  return normalized === fallback.toUpperCase() || QR_TABLE_CODES.includes(normalized as QrTableCode)
-    ? normalized
-    : fallback;
+  const normalized = value.trim();
+  return normalized ? normalized : fallback;
 }

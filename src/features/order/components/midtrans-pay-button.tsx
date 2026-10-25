@@ -1,11 +1,9 @@
 "use client";
 
 import Script from "next/script";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
   type CartItem,
-  formatCurrency,
-  getOrderSummary,
   readTableCode,
 } from "@/features/order/lib/checkout";
 import {
@@ -45,7 +43,6 @@ export function MidtransPayButton({
   const [isLoading, setIsLoading] = useState(false);
   const [paymentMessage, setPaymentMessage] = useState<string | null>(null);
   const [selectedMethodId, setSelectedMethodId] = useState(paymentMethodOptions[0]?.id ?? "all");
-  const summary = useMemo(() => getOrderSummary(cart), [cart]);
   const selectedMethod = getPaymentMethodOption(selectedMethodId);
 
   async function handlePayment() {
@@ -85,9 +82,7 @@ export function MidtransPayButton({
 
       window.snap.pay(result.token, {
         onSuccess: () => {
-          setPaymentMessage(
-            `Pembayaran berhasil diproses untuk total ${formatCurrency(summary.total)}.`,
-          );
+          window.location.assign("/checkout/success");
         },
         onPending: () => {
           setPaymentMessage("Pembayaran dibuat. Silakan selesaikan pembayaran di Midtrans.");

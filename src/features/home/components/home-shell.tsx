@@ -1,74 +1,79 @@
-'use client';
+"use client";
 
-import { type MouseEvent, useEffect, useRef, useState } from 'react';
-import { gsap } from 'gsap';
-import type { Route } from 'next';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Container } from '@/components/layout/container';
-import { siteConfig } from '@/config/site';
-import { type CartItem, formatCurrency, getOrderSummary, persistCart, persistTableCode } from '@/features/order/lib/checkout';
+import { type MouseEvent, useEffect, useRef, useState } from "react";
+import type { Route } from "next";
+import { useRouter } from "next/navigation";
+import { Container } from "@/components/layout/container";
+import { siteConfig } from "@/config/site";
+import {
+  type CartItem,
+  formatCurrency,
+  getOrderSummary,
+  persistCart,
+  persistTableCode,
+} from "@/features/order/lib/checkout";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
 function IconSearch() {
-    return (
-        <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-        >
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-        </svg>
-    );
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+  );
 }
 
 function IconX() {
-    return (
-        <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-        >
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-        </svg>
-    );
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  );
 }
 
 function IconCart() {
-    return (
-        <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-        >
-            <circle cx="9" cy="21" r="1" />
-            <circle cx="20" cy="21" r="1" />
-            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-        </svg>
-    );
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="9" cy="21" r="1" />
+      <circle cx="20" cy="21" r="1" />
+      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+    </svg>
+  );
 }
 
 function IconLogo() {
@@ -94,22 +99,22 @@ function IconLogo() {
 }
 
 function IconChevronRight() {
-    return (
-        <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-        >
-            <polyline points="9 18 15 12 9 6" />
-        </svg>
-    );
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <polyline points="9 18 15 12 9 6" />
+    </svg>
+  );
 }
 
 function IconChevronUp() {
@@ -150,6 +155,36 @@ function IconChevronDown() {
   );
 }
 
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+export type MenuItemData = {
+  id?: string;
+  name: string;
+  slug?: string;
+  description: string | null;
+  price: number | string;
+  priceValue?: number;
+  image_url?: string | null;
+  accent?: string;
+  sort_order?: number;
+  is_available?: boolean;
+  is_featured?: boolean;
+  categories: string[];
+};
+
+export type CategorySection = {
+  label: string;
+  slug: string;
+  description?: string;
+};
+
+export type HomeShellProps = {
+  initialCart?: CartItem[];
+  menuItems: MenuItemData[];
+  categorySections: CategorySection[];
+  tableCode: string;
+};
+
 // ─── Menu Card ────────────────────────────────────────────────────────────────
 
 function MenuCard({
@@ -159,76 +194,123 @@ function MenuCard({
   onAdd,
   onRemove,
 }: {
-  item: (typeof menuItems)[number];
+  item: MenuItemData;
   cartQty: number;
   flashKey: number;
-  onAdd: () => void;
+  onAdd: (thumbnail: HTMLElement | null) => void;
   onRemove: () => void;
 }) {
   const inCart = cartQty > 0;
+  const isAvailable = item.is_available !== false;
+  const cardRef = useRef<HTMLElement>(null);
+  const displayPrice = typeof item.price === "string" ? item.price : formatCurrency(item.price);
 
   return (
     <article
-      className={`menu-card rounded-2xl border bg-white/90 shadow-sm transition-shadow hover:shadow-md ${inCart ? "border-primary/25 ring-1 ring-primary/10" : "border-border"
-        } ${flashKey > 0 ? "card-flash" : ""}`}
+      ref={cardRef}
+      className={`menu-card rounded-2xl border bg-white/90 p-3.5 shadow-sm transition-all hover:shadow-md ${
+        inCart ? "border-primary/25 ring-1 ring-primary/10" : "border-border"
+      } ${!isAvailable ? "opacity-60 grayscale" : ""} ${flashKey > 0 ? "card-flash" : ""}`}
     >
-      <div className="flex gap-3 p-3.5">
-        {/* Thumbnail */}
+      <div className="flex gap-3 items-start">
+        {/* Thumbnail: image from DB or fallback gradient */}
         <div
-          className={`h-[88px] w-[72px] shrink-0 rounded-xl bg-gradient-to-br ${item.accent}`}
-          aria-hidden="true"
-        />
+          data-menu-thumbnail
+          className={`h-[88px] w-[76px] shrink-0 overflow-hidden rounded-xl bg-gradient-to-br ${
+            item.accent ?? "from-primary/20 to-accent/20"
+          } flex items-center justify-center`}
+        >
+          {item.image_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={item.image_url}
+              alt={item.name}
+              width={76}
+              height={88}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <span className="text-2xl font-bold text-primary/40">
+              {item.name.charAt(0)}
+            </span>
+          )}
+        </div>
 
         {/* Info */}
-        <div className="min-w-0 flex-1 flex flex-col justify-between py-0.5">
+        <div className="flex min-w-0 flex-1 flex-col justify-between py-0.5">
           <div>
-            <h4 className="text-sm font-semibold leading-snug text-foreground">
-              {item.name}
-            </h4>
-            <p className="mt-1 text-xs leading-relaxed text-muted line-clamp-2">
-              {item.description}
-            </p>
+            <div className="flex items-start justify-between gap-2">
+              <h4 className="text-sm font-semibold leading-snug text-foreground">
+                {item.name}
+              </h4>
+              {!isAvailable && (
+                <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-muted">
+                  Habis
+                </span>
+              )}
+            </div>
+            {item.description && (
+              <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted">
+                {item.description}
+              </p>
+            )}
           </div>
 
           {/* Price + stepper row */}
-          <div className="mt-2 flex items-center justify-between gap-2">
-            <span className="text-sm font-bold text-primary">{item.price}</span>
+          <div className="mt-3 flex items-center justify-between gap-2">
+            <span className="text-sm font-bold text-primary">{displayPrice}</span>
 
-            {inCart ? (
-              <div className="flex items-center gap-0.5 rounded-full border border-border bg-white px-1 py-1 shadow-sm">
+            {isAvailable ? (
+              inCart ? (
+                <div className="flex items-center gap-0.5 rounded-full border border-border bg-white px-1 py-1 shadow-sm">
+                  <button
+                    type="button"
+                    aria-label={`Kurangi ${item.name}`}
+                    onClick={onRemove}
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-base font-bold text-muted hover:bg-background hover:text-foreground transition-colors"
+                  >
+                    −
+                  </button>
+                  <span
+                    key={flashKey}
+                    className="qty-pop min-w-[1.75rem] text-center text-sm font-bold text-foreground"
+                  >
+                    {cartQty}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label={`Tambah ${item.name}`}
+                    onClick={() => {
+                      const thumbnail =
+                        cardRef.current?.querySelector<HTMLImageElement>("img") ??
+                        cardRef.current?.querySelector<HTMLElement>("[data-menu-thumbnail]") ??
+                        null;
+                      onAdd(thumbnail);
+                    }}
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-base font-bold text-white hover:bg-primary/90 active:scale-90 transition-transform"
+                  >
+                    +
+                  </button>
+                </div>
+              ) : (
                 <button
                   type="button"
-                  aria-label={`Kurangi ${item.name}`}
-                  onClick={onRemove}
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-base font-bold text-muted hover:bg-background hover:text-foreground transition-colors"
+                  aria-label={`Tambah ${item.name} ke pesanan`}
+                  onClick={() => {
+                    const thumbnail =
+                      cardRef.current?.querySelector<HTMLImageElement>("img") ??
+                      cardRef.current?.querySelector<HTMLElement>("[data-menu-thumbnail]") ??
+                      null;
+                    onAdd(thumbnail);
+                  }}
+                  className="flex min-h-[2.25rem] items-center gap-1 rounded-full bg-primary px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-primary/90 active:scale-95 transition-transform"
                 >
-                  −
+                  <span className="text-sm leading-none">+</span>
+                  <span>Tambah</span>
                 </button>
-                <span
-                  key={flashKey}
-                  className="qty-pop min-w-[1.75rem] text-center text-sm font-bold text-foreground"
-                >
-                  {cartQty}
-                </span>
-                <button
-                  type="button"
-                  aria-label={`Tambah ${item.name}`}
-                  onClick={onAdd}
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-base font-bold text-white hover:bg-primary/90 active:scale-90 transition-transform"
-                >
-                  +
-                </button>
-              </div>
+              )
             ) : (
-              <button
-                type="button"
-                aria-label={`Tambah ${item.name} ke pesanan`}
-                onClick={onAdd}
-                className="flex min-h-[2.25rem] items-center gap-1 rounded-full bg-primary px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-primary/90 active:scale-95 transition-transform"
-              >
-                <span className="text-sm leading-none">+</span>
-                <span>Tambah</span>
-              </button>
+              <span className="text-xs text-muted">Tidak tersedia</span>
             )}
           </div>
         </div>
@@ -237,57 +319,193 @@ function MenuCard({
   );
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 export function HomeShell({
   initialCart = [],
+  menuItems,
+  categorySections,
   tableCode,
-}: {
-  initialCart?: CartItem[];
-  tableCode: string;
-}) {
+}: HomeShellProps) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [cart, setCart] = useState<CartItem[]>(initialCart);
   const [activeCategory, setActiveCategory] = useState<string>("");
   const [cartExpanded, setCartExpanded] = useState(false);
-  // tracks add counts per item — used only as animation key, NOT as React key
+  const [isScrolled, setIsScrolled] = useState(false);
   const [addCounts, setAddCounts] = useState<Record<string, number>>({});
-  const pillNavRef = useRef<HTMLDivElement>(null);
 
+  const pillNavRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
+  const categoryScrollTimeoutRef = useRef<number | undefined>(undefined);
+  const headerTransitionTimeoutRef = useRef<number | undefined>(undefined);
+  const headerIsTransitioningRef = useRef(false);
+  const isScrolledRef = useRef(false);
+
+  // Fly-to-cart animation using standard Web Animations API
+  function flyToCart(img: HTMLElement | null) {
+    const cartIcon = document.getElementById("cart-icon") || document.getElementById("cart-bar");
+    if (!img || !cartIcon) return;
+
+    try {
+      const imgRect = img.getBoundingClientRect();
+      const cartRect = cartIcon.getBoundingClientRect();
+
+      const wrapper = document.createElement("div");
+      wrapper.style.position = "fixed";
+      wrapper.style.left = `${imgRect.left}px`;
+      wrapper.style.top = `${imgRect.top}px`;
+      wrapper.style.width = `${imgRect.width}px`;
+      wrapper.style.height = `${imgRect.height}px`;
+      wrapper.style.borderRadius = "1rem";
+      wrapper.style.overflow = "hidden";
+      wrapper.style.zIndex = "999";
+      wrapper.style.pointerEvents = "none";
+      wrapper.style.margin = "0";
+      wrapper.style.opacity = "1";
+      wrapper.style.transformOrigin = "center center";
+
+      const clone = img.cloneNode(true) as HTMLElement;
+      clone.style.width = "100%";
+      clone.style.height = "100%";
+      clone.style.objectFit = "cover";
+      clone.style.display = "block";
+      clone.style.margin = "0";
+
+      wrapper.appendChild(clone);
+      document.body.appendChild(wrapper);
+
+      const deltaX = cartRect.left + cartRect.width / 2 - imgRect.left - imgRect.width / 2;
+      const deltaY = cartRect.top + cartRect.height / 2 - imgRect.top - imgRect.height / 2;
+      const endScale = 18 / Math.max(imgRect.width, imgRect.height);
+
+      const animation = wrapper.animate(
+        [
+          {
+            transform: "translate3d(0, 0, 0) scale(1)",
+            borderRadius: "1rem",
+            opacity: 1,
+          },
+          {
+            transform: "translate3d(0, 0, 0) scale(1.08)",
+            borderRadius: "1.1rem",
+            opacity: 1,
+            offset: 0.2,
+          },
+          {
+            transform: `translate3d(${deltaX}px, ${deltaY}px, 0) scale(${endScale})`,
+            borderRadius: "50%",
+            opacity: 0,
+            offset: 1,
+          },
+        ],
+        {
+          duration: 550,
+          easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
+          fill: "forwards",
+        },
+      );
+
+      animation.onfinish = () => {
+        wrapper.remove();
+      };
+    } catch {
+      // Graceful fallback if DOM is detached
+    }
+  }
+
+  // Filter menu items by search query
   const normalizedQuery = searchQuery.trim().toLowerCase();
   const filteredMenuItems = menuItems.filter((item) => {
     if (!normalizedQuery) return true;
-    const searchableText =
-      `${item.name} ${item.categories.join(" ")} ${item.description}`.toLowerCase();
+    const searchableText = `${item.name} ${item.categories.join(" ")} ${item.description ?? ""}`.toLowerCase();
     return searchableText.includes(normalizedQuery);
   });
 
+  // Group into categories, placing unavailable items at the bottom
   const menuSections = categorySections
     .map((section) => ({
       ...section,
-      items: filteredMenuItems.filter((item) =>
-        item.categories.some((cat) => cat === section.slug),
-      ),
+      items: filteredMenuItems
+        .filter((item) => item.categories.some((cat) => cat === section.slug))
+        .sort((a, b) => Number(b.is_available !== false) - Number(a.is_available !== false)),
     }))
     .filter((section) => section.items.length > 0);
 
   const { subtotal, serviceFee, tax, total, totalItems: totalCartItems } = getOrderSummary(cart);
 
+  // Persist cart to cookie
   useEffect(() => {
     persistCart(cart);
   }, [cart]);
 
-  // Initialise active category when sections first become available
+  // Persist table code to cookie
+  useEffect(() => {
+    if (tableCode) {
+      persistTableCode(tableCode);
+    }
+  }, [tableCode]);
+
+  // Hysteresis scroll collapse
+  const SCROLL_COLLAPSE = 70;
+  const SCROLL_EXPAND = 45;
+  const HEADER_COLLAPSE_DURATION = 400;
+  const CATEGORY_SCROLL_GAP = 16;
+
+  function markHeaderTransitioning() {
+    window.clearTimeout(headerTransitionTimeoutRef.current);
+    headerIsTransitioningRef.current = true;
+    headerTransitionTimeoutRef.current = window.setTimeout(() => {
+      headerIsTransitioningRef.current = false;
+    }, HEADER_COLLAPSE_DURATION);
+  }
+
+  useEffect(() => {
+    let rafId: number;
+    const handleScroll = () => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        const y = window.scrollY;
+        const nowCollapsed = isScrolledRef.current;
+        let next = nowCollapsed;
+
+        if (nowCollapsed) {
+          next = y > SCROLL_EXPAND;
+        } else {
+          next = y > SCROLL_COLLAPSE;
+        }
+
+        if (next !== nowCollapsed) {
+          isScrolledRef.current = next;
+          markHeaderTransitioning();
+          setIsScrolled(next);
+        }
+      });
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      cancelAnimationFrame(rafId);
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      window.clearTimeout(categoryScrollTimeoutRef.current);
+      window.clearTimeout(headerTransitionTimeoutRef.current);
+    };
+  }, []);
+
+  // Initialise active category when sections first load
   const firstSectionSlug = menuSections[0]?.slug ?? "";
   if (!activeCategory && firstSectionSlug) {
     setActiveCategory(firstSectionSlug);
   }
 
+  // Active category intersection observer
   useEffect(() => {
-    const sections = menuSections.map((s) =>
-      document.getElementById(`category-${s.slug}`),
-    );
+    const sections = menuSections.map((s) => document.getElementById(`category-${s.slug}`));
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -295,128 +513,38 @@ export function HomeShell({
         if (visible?.target.id) {
           const slug = visible.target.id.replace("category-", "");
           setActiveCategory(slug);
-          // scroll pill into view
-          const pill = pillNavRef.current?.querySelector<HTMLElement>(
-            `[data-slug="${slug}"]`,
-          );
+          const pill = pillNavRef.current?.querySelector<HTMLElement>(`[data-slug="${slug}"]`);
           pill?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
         }
       },
-      { threshold: 0.2, rootMargin: "-110px 0px -40% 0px" },
+      { threshold: 0.25, rootMargin: "-120px 0px -40% 0px" },
     );
 
     sections.forEach((el) => el && observer.observe(el));
     return () => observer.disconnect();
   }, [menuSections.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const normalizedQuery = searchQuery.trim().toLowerCase();
-    const filteredMenuItems = menuItems.filter((item) => {
-        if (!normalizedQuery) return true;
-        const searchableText = `${item.name} ${item.categories.join(' ')} ${item.description}`.toLowerCase();
-        return searchableText.includes(normalizedQuery);
-    });
+  // ── Cart Handlers ──────────────────────────────────────────────────────────
 
-    const menuSections = categorySections
-        .map((section) => ({
-            ...section,
-            items: filteredMenuItems
-                .filter((item) => item.categories.some((cat) => cat === section.slug))
-                .sort((a, b) => Number(b.is_available) - Number(a.is_available)),
-        }))
-        .filter((section) => section.items.length > 0);
+  function getCartQty(itemName: string) {
+    return cart.find((c) => c.name === itemName)?.quantity ?? 0;
+  }
 
-    const { subtotal, serviceFee, tax, total, totalItems: totalCartItems } = getOrderSummary(cart);
+  function handleAddOne(item: MenuItemData, thumbnail: HTMLElement | null) {
+    const unitPrice = typeof item.price === "number" ? item.price : item.priceValue ?? 0;
 
-    useEffect(() => {
-        persistCart(cart);
-    }, [cart]);
-
-    // Persist table code from QR scan to cookie
-    useEffect(() => {
-        if (tableCode && tableCode !== siteConfig.defaultTableCode) {
-            persistTableCode(tableCode);
-        }
-    }, [tableCode]);
-
-    // Hysteresis: collapse at 70px, expand at 50px — no flicker near threshold
-    const SCROLL_COLLAPSE = 70;
-    const SCROLL_EXPAND = 50;
-    const HEADER_COLLAPSE_DURATION = 500;
-    const CATEGORY_SCROLL_GAP = 16;
-
-    function markHeaderTransitioning() {
-        window.clearTimeout(headerTransitionTimeoutRef.current);
-        headerIsTransitioningRef.current = true;
-        headerTransitionTimeoutRef.current = window.setTimeout(() => {
-            headerIsTransitioningRef.current = false;
-        }, HEADER_COLLAPSE_DURATION);
-    }
-
-    useEffect(() => {
-        let rafId: number;
-        const handleScroll = () => {
-            cancelAnimationFrame(rafId);
-            rafId = requestAnimationFrame(() => {
-                const y = window.scrollY;
-                const nowCollapsed = isScrolledRef.current;
-                let next = nowCollapsed;
-
-                if (nowCollapsed) {
-                    // Stay collapsed until scrolled back above expand threshold
-                    next = y > SCROLL_EXPAND;
-                } else {
-                    // Stay expanded until past collapse threshold
-                    next = y > SCROLL_COLLAPSE;
-                }
-
-                if (next !== nowCollapsed) {
-                    isScrolledRef.current = next;
-                    markHeaderTransitioning();
-                    setIsScrolled(next);
-                }
-            });
-        };
-        window.addEventListener('scroll', handleScroll, { passive: true });
-        handleScroll();
-        return () => {
-            window.removeEventListener('scroll', handleScroll);
-            cancelAnimationFrame(rafId);
-        };
-    }, []);
-
-    useEffect(() => {
-        return () => {
-            window.clearTimeout(categoryScrollTimeoutRef.current);
-            window.clearTimeout(headerTransitionTimeoutRef.current);
-        };
-    }, []);
-
-    // Initialise active category when sections first become available
-    const firstSectionSlug = menuSections[0]?.slug ?? '';
-    if (!activeCategory && firstSectionSlug) {
-        setActiveCategory(firstSectionSlug);
-    }
-
-    useEffect(() => {
-        const sections = menuSections.map((s) => document.getElementById(`category-${s.slug}`));
-
-        const observer = new IntersectionObserver(
-            (entries) => {
-                const visible = entries.find((e) => e.isIntersecting);
-                if (visible?.target.id) {
-                    const slug = visible.target.id.replace('category-', '');
-                    setActiveCategory(slug);
-                    // scroll pill into view
-                    const pill = pillNavRef.current?.querySelector<HTMLElement>(`[data-slug="${slug}"]`);
-                    pill?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-                }
-            },
-            { threshold: 0.25, rootMargin: '-120px 0px -40% 0px' },
+    setCart((current) => {
+      const existing = current.find((c) => c.name === item.name);
+      if (existing) {
+        return current.map((c) =>
+          c.name === item.name ? { ...c, quantity: c.quantity + 1 } : c,
         );
       }
-      return [...current, { name: item.name, quantity: 1, unitPrice: item.priceValue }];
+      return [...current, { name: item.name, quantity: 1, unitPrice }];
     });
+
     setAddCounts((prev) => ({ ...prev, [item.name]: (prev[item.name] ?? 0) + 1 }));
+    flyToCart(thumbnail);
   }
 
   function handleRemoveOne(itemName: string) {
@@ -435,21 +563,56 @@ export function HomeShell({
     router.push(`/checkout/review?table=${encodeURIComponent(tableCode)}` as Route);
   }
 
-        if (headerIsTransitioningRef.current) {
-            categoryScrollTimeoutRef.current = window.setTimeout(scrollToCategory, HEADER_COLLAPSE_DURATION);
-            return;
-        }
+  function handleCategoryNavigation(event: MouseEvent<HTMLAnchorElement>, slug: string) {
+    event.preventDefault();
+    setActiveCategory(slug);
+
+    const target = document.getElementById(`category-${slug}`);
+    if (!target) return;
+
+    const scrollToCategory = () => {
+      const headerHeight = headerRef.current?.getBoundingClientRect().height ?? 0;
+      const targetTop = window.scrollY + target.getBoundingClientRect().top;
+      window.scrollTo({
+        top: Math.max(0, targetTop - headerHeight - CATEGORY_SCROLL_GAP),
+        behavior: "smooth",
+      });
+    };
+
+    window.clearTimeout(categoryScrollTimeoutRef.current);
+    const targetIsBelowHeader =
+      target.getBoundingClientRect().top > (headerRef.current?.getBoundingClientRect().height ?? 0);
+
+    if (!isScrolledRef.current && targetIsBelowHeader) {
+      isScrolledRef.current = true;
+      markHeaderTransitioning();
+      setIsScrolled(true);
+    }
+
+    if (headerIsTransitioningRef.current) {
+      categoryScrollTimeoutRef.current = window.setTimeout(scrollToCategory, HEADER_COLLAPSE_DURATION);
+      return;
+    }
+
+    scrollToCategory();
+  }
 
   return (
     <div className="bg-white sm:py-0 sm:px-6">
       <div className="mobile-app-shell mx-auto flex min-h-screen w-full max-w-[576px] flex-col bg-background sm:rounded-b-[2rem] sm:border sm:border-border sm:shadow-[0_24px_90px_rgba(20,44,30,0.14)]">
 
         {/* ── Sticky Header ──────────────────────────────────────────────── */}
-        <header className="sticky top-0 z-30 border-b border-border/70 bg-background/96 backdrop-blur-xl">
-          <Container className="py-3">
-
+        <header
+          ref={headerRef}
+          className="sticky top-0 z-30 border-b border-border/70 bg-background/96 backdrop-blur-xl"
+        >
+          <Container className={`transition-all duration-300 ${isScrolled ? "py-2" : "py-3"}`}>
             {/* Top row: logo + app name + table badge */}
-            <div className="flex items-center justify-between gap-3 mb-3">
+            <div
+              className={`flex items-center justify-between gap-3 transition-all duration-300 ${
+                isScrolled ? "mb-1.5 opacity-90 scale-[0.98] origin-top" : "mb-3"
+              }`}
+            >
               <div className="flex items-center gap-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10">
                   <IconLogo />
@@ -509,11 +672,12 @@ export function HomeShell({
                       key={section.slug}
                       data-slug={section.slug}
                       href={`#category-${section.slug}`}
-                      onClick={() => setActiveCategory(section.slug)}
-                      className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${isActive
-                        ? "bg-primary text-white shadow-sm"
-                        : "border border-border bg-white text-muted hover:border-primary/30 hover:text-foreground"
-                        }`}
+                      onClick={(event) => handleCategoryNavigation(event, section.slug)}
+                      className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${
+                        isActive
+                          ? "bg-primary text-white shadow-sm"
+                          : "border border-border bg-white text-muted hover:border-primary/30 hover:text-foreground"
+                      }`}
                     >
                       {section.label}
                     </a>
@@ -521,94 +685,69 @@ export function HomeShell({
                 })}
               </nav>
             </div>
-
           </Container>
         </header>
 
         {/* ── Main content ───────────────────────────────────────────────── */}
         <main className="flex-1 pb-36">
-
-          {/* Category sections */}
           {menuSections.length ? (
             <>
-              {/* Item count */}
+              {/* Item count header */}
               <div className="pt-5 pb-1">
                 <Container>
                   <div className="flex items-baseline justify-between gap-3">
-                    <h1 className="text-lg font-bold tracking-tight text-foreground">Menu</h1>
+                    <h2 className="text-lg font-bold tracking-tight text-foreground">Menu</h2>
                     <span className="text-xs text-muted">
-                      {filteredMenuItems.length} item
+                      {filteredMenuItems.length} pilihan
                       {normalizedQuery ? ` untuk "${searchQuery.trim()}"` : ""}
                     </span>
                   </div>
                 </Container>
               </div>
 
-              {menuSections.map((section) => (
-                <section
-                  key={section.slug}
-                  id={`category-${section.slug}`}
-                  className="scroll-mt-[130px] pt-5"
-                >
-                  <Container className="space-y-3">
-                    {/* Section header */}
-                    <div className="flex items-baseline gap-2">
-                      <h2 className="text-base font-bold text-foreground">{section.label}</h2>
-                      <span className="text-xs text-muted">
-                        {section.items.length} item
-                      </span>
-                    </div>
+              {/* Category sections */}
+              <div className="space-y-6 pt-3">
+                {menuSections.map((section) => (
+                  <section
+                    key={section.slug}
+                    id={`category-${section.slug}`}
+                    className="scroll-mt-36"
+                  >
+                    <Container>
+                      <div className="mb-3">
+                        <h3 className="text-sm font-bold tracking-tight text-foreground">
+                          {section.label}
+                        </h3>
+                        {section.description && (
+                          <p className="mt-0.5 text-xs text-muted">{section.description}</p>
+                        )}
+                      </div>
 
-                    {/* Menu cards */}
-                    <div className="grid gap-2.5">
-                      {section.items.map((item) => {
-                        const cartQty = getCartQty(item.name);
-                        const flashKey = addCounts[item.name] ?? 0;
-
-                        return (
+                      <div className="space-y-3">
+                        {section.items.map((item) => (
                           <MenuCard
-                            key={item.name}
+                            key={item.id ?? `${section.slug}-${item.name}`}
                             item={item}
-                            cartQty={cartQty}
-                            flashKey={flashKey}
-                            onAdd={() => handleAddOne(item)}
+                            cartQty={getCartQty(item.name)}
+                            flashKey={addCounts[item.name] ?? 0}
+                            onAdd={(thumb) => handleAddOne(item, thumb)}
                             onRemove={() => handleRemoveOne(item.name)}
                           />
-                        );
-                      })}
-                    </div>
-                  </Container>
-                </section>
-              ))}
-
-              {/* Bottom checkout cue */}
-              <div className="pt-8 pb-4">
-                <Container>
-                  <div className="rounded-2xl border border-border/60 bg-white/60 p-4 text-center">
-                    <p className="text-xs text-muted mb-3">
-                      Sudah selesai memilih? Tinjau pesanan sebelum checkout.
-                    </p>
-                    <button
-                      type="button"
-                      disabled={cart.length === 0}
-                      onClick={handleProceedToCheckout}
-                      className="flex w-full items-center justify-center gap-1.5 rounded-full bg-primary py-3.5 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all shadow-sm"
-                    >
-                      Lanjut ke Checkout
-                      <IconChevronRight />
-                    </button>
-                  </div>
-                </Container>
+                        ))}
+                      </div>
+                    </Container>
+                  </section>
+                ))}
               </div>
             </>
           ) : (
-            <div className="pt-6">
+            <div className="pt-10">
               <Container>
                 <div className="rounded-2xl border border-dashed border-border bg-white/70 p-8 text-center">
-                  <p className="text-3xl mb-3" aria-hidden="true">🔍</p>
-                  <h2 className="text-base font-semibold text-foreground">
-                    Menu tidak ditemukan
-                  </h2>
+                  <p className="text-3xl mb-3" aria-hidden="true">
+                    🔍
+                  </p>
+                  <h2 className="text-base font-semibold text-foreground">Menu tidak ditemukan</h2>
                   <p className="mt-1.5 text-sm leading-relaxed text-muted">
                     Coba kata kunci lain, misalnya nama menu atau kategori.
                   </p>
@@ -633,7 +772,6 @@ export function HomeShell({
           <Container>
             {cart.length > 0 ? (
               <div className="overflow-hidden rounded-2xl bg-[#1a2e24]">
-
                 {/* Toggle header — always visible */}
                 <button
                   type="button"
@@ -643,7 +781,7 @@ export function HomeShell({
                   aria-controls="cart-detail-panel"
                 >
                   {/* Cart icon + badge */}
-                  <div className="relative shrink-0">
+                  <div id="cart-icon" className="relative shrink-0">
                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10">
                       <IconCart />
                     </div>
@@ -686,17 +824,20 @@ export function HomeShell({
                         </div>
                       ))}
                     </div>
-                </main>
 
                     {/* Price breakdown */}
                     <div className="mt-3.5 rounded-xl bg-white/8 px-3.5 py-3 space-y-1.5">
                       <div className="flex items-center justify-between gap-3">
                         <p className="text-xs text-white/55">Subtotal</p>
-                        <p className="text-xs font-semibold text-white">{formatCurrency(subtotal)}</p>
+                        <p className="text-xs font-semibold text-white">
+                          {formatCurrency(subtotal)}
+                        </p>
                       </div>
                       <div className="flex items-center justify-between gap-3">
                         <p className="text-xs text-white/55">Biaya layanan</p>
-                        <p className="text-xs font-semibold text-white">{formatCurrency(serviceFee)}</p>
+                        <p className="text-xs font-semibold text-white">
+                          {formatCurrency(serviceFee)}
+                        </p>
                       </div>
                       <div className="flex items-center justify-between gap-3">
                         <p className="text-xs text-white/55">Pajak (11%)</p>
@@ -712,7 +853,7 @@ export function HomeShell({
                     <button
                       type="button"
                       onClick={handleProceedToCheckout}
-                      className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-full bg-accent py-3 text-sm font-bold text-[#1a1f1c] hover:bg-accent/90 active:scale-[0.98] transition-all"
+                      className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-full bg-accent py-3 text-sm font-bold text-[#1a1f1c] hover:bg-accent/90 active:scale-[0.98] transition-all cursor-pointer"
                     >
                       Lanjut ke Checkout
                       <IconChevronRight />
@@ -728,12 +869,14 @@ export function HomeShell({
                 </div>
                 <p className="text-sm text-muted">
                   Belum ada pesanan. Ketuk{" "}
-                  <span className="font-semibold text-foreground">Tambah</span>{" "}
-                  di menu untuk mulai.
+                  <span className="font-semibold text-foreground">Tambah</span> di menu untuk mulai.
                 </p>
               </div>
             )}
           </Container>
         </div>
-    );
+
+      </div>
+    </div>
+  );
 }

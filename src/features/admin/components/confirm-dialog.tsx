@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef } from "react";
 
 type ConfirmDialogProps = {
   trigger: React.ReactNode;
@@ -23,22 +23,18 @@ export function ConfirmDialog({
   onCancel,
   variant = "default",
 }: ConfirmDialogProps) {
-  const [isOpen, setIsOpen] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   function handleOpen() {
-    setIsOpen(true);
     dialogRef.current?.showModal();
   }
 
   function handleClose() {
-    setIsOpen(false);
     dialogRef.current?.close();
     onCancel?.();
   }
 
   function handleConfirm() {
-    setIsOpen(false);
     dialogRef.current?.close();
     onConfirm();
   }

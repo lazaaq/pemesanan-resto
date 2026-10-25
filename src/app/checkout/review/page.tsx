@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { ReviewOrderShell } from "@/features/order/components/review-order-shell";
-import { CHECKOUT_CART_COOKIE_KEY, parseStoredCart } from "@/features/order/lib/checkout";
+import { CHECKOUT_CART_COOKIE_KEY, TABLE_CODE_COOKIE_KEY, parseStoredCart } from "@/features/order/lib/checkout";
 import { getTableCode } from "@/features/order/lib/tables";
 import { getActiveThemeCssVariables } from "@/lib/theme/get-active-theme-palette";
 
@@ -18,7 +18,8 @@ export default async function ReviewOrderPage({
   const cart = parseStoredCart(cookieStore.get(CHECKOUT_CART_COOKIE_KEY)?.value);
   const params = await searchParams;
   const requestedTable = Array.isArray(params.table) ? params.table[0] : params.table;
-  const tableCode = getTableCode(requestedTable);
+  const cookieTable = cookieStore.get(TABLE_CODE_COOKIE_KEY)?.value;
+  const tableCode = getTableCode(requestedTable || cookieTable);
 
   return (
     <div style={themeCssVariables}>

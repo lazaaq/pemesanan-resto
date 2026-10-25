@@ -9,7 +9,6 @@ import {
   type CartItem,
   formatCurrency,
   getOrderSummary,
-  readTableCode,
 } from "@/features/order/lib/checkout";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────

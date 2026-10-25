@@ -230,7 +230,7 @@ export async function POST(request: Request) {
         email,
       },
       callbackUrl: getPublicUrl("/api/payments/duitku/callback"),
-      returnUrl: getPublicUrl("/checkout/review"),
+      returnUrl: getPublicUrl("/checkout/success"),
       expiryPeriod,
     };
     const response = await fetch(getDuitkuCreateInvoiceUrl(isProduction), {

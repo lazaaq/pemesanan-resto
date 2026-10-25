@@ -79,6 +79,7 @@ function TableFormDialog({
         onClose={closeDialog}
       >
         <form onSubmit={handleSubmit} className="grid gap-4 p-5">
+          <input type="hidden" name="restaurantId" value={restaurantId} />
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--admin-muted)" }}>
