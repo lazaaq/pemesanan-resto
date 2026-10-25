@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { Container } from "@/components/layout/container";
 import { siteConfig } from "@/config/site";
@@ -7,6 +9,7 @@ import {
   type CartItem,
   formatCurrency,
   getOrderSummary,
+  readTableCode,
 } from "@/features/order/lib/checkout";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────

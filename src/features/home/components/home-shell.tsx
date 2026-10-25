@@ -1,79 +1,74 @@
-"use client";
+'use client';
 
-import { useEffect, useRef, useState } from "react";
-import type { Route } from "next";
-import { useRouter } from "next/navigation";
-import { Container } from "@/components/layout/container";
-import { siteConfig } from "@/config/site";
-import { categorySections, menuItems } from "@/features/home/data";
-import {
-  type CartItem,
-  formatCurrency,
-  getOrderSummary,
-  persistCart,
-} from "@/features/order/lib/checkout";
+import { type MouseEvent, useEffect, useRef, useState } from 'react';
+import { gsap } from 'gsap';
+import type { Route } from 'next';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Container } from '@/components/layout/container';
+import { siteConfig } from '@/config/site';
+import { type CartItem, formatCurrency, getOrderSummary, persistCart, persistTableCode } from '@/features/order/lib/checkout';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
 function IconSearch() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <circle cx="11" cy="11" r="8" />
-      <line x1="21" y1="21" x2="16.65" y2="16.65" />
-    </svg>
-  );
+    return (
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+        >
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+    );
 }
 
 function IconX() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <line x1="18" y1="6" x2="6" y2="18" />
-      <line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
-  );
+    return (
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+        >
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+    );
 }
 
 function IconCart() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <circle cx="9" cy="21" r="1" />
-      <circle cx="20" cy="21" r="1" />
-      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-    </svg>
-  );
+    return (
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+        >
+            <circle cx="9" cy="21" r="1" />
+            <circle cx="20" cy="21" r="1" />
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+        </svg>
+    );
 }
 
 function IconLogo() {
@@ -99,22 +94,22 @@ function IconLogo() {
 }
 
 function IconChevronRight() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <polyline points="9 18 15 12 9 6" />
-    </svg>
-  );
+    return (
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+        >
+            <polyline points="9 18 15 12 9 6" />
+        </svg>
+    );
 }
 
 function IconChevronUp() {
@@ -314,18 +309,109 @@ export function HomeShell({
     return () => observer.disconnect();
   }, [menuSections.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Cart helpers ────────────────────────────────────────────────────────────
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    const filteredMenuItems = menuItems.filter((item) => {
+        if (!normalizedQuery) return true;
+        const searchableText = `${item.name} ${item.categories.join(' ')} ${item.description}`.toLowerCase();
+        return searchableText.includes(normalizedQuery);
+    });
 
-  function getCartQty(itemName: string) {
-    return cart.find((c) => c.name === itemName)?.quantity ?? 0;
-  }
+    const menuSections = categorySections
+        .map((section) => ({
+            ...section,
+            items: filteredMenuItems
+                .filter((item) => item.categories.some((cat) => cat === section.slug))
+                .sort((a, b) => Number(b.is_available) - Number(a.is_available)),
+        }))
+        .filter((section) => section.items.length > 0);
 
-  function handleAddOne(item: (typeof menuItems)[number]) {
-    setCart((current) => {
-      const existing = current.find((c) => c.name === item.name);
-      if (existing) {
-        return current.map((c) =>
-          c.name === item.name ? { ...c, quantity: c.quantity + 1 } : c,
+    const { subtotal, serviceFee, tax, total, totalItems: totalCartItems } = getOrderSummary(cart);
+
+    useEffect(() => {
+        persistCart(cart);
+    }, [cart]);
+
+    // Persist table code from QR scan to cookie
+    useEffect(() => {
+        if (tableCode && tableCode !== siteConfig.defaultTableCode) {
+            persistTableCode(tableCode);
+        }
+    }, [tableCode]);
+
+    // Hysteresis: collapse at 70px, expand at 50px — no flicker near threshold
+    const SCROLL_COLLAPSE = 70;
+    const SCROLL_EXPAND = 50;
+    const HEADER_COLLAPSE_DURATION = 500;
+    const CATEGORY_SCROLL_GAP = 16;
+
+    function markHeaderTransitioning() {
+        window.clearTimeout(headerTransitionTimeoutRef.current);
+        headerIsTransitioningRef.current = true;
+        headerTransitionTimeoutRef.current = window.setTimeout(() => {
+            headerIsTransitioningRef.current = false;
+        }, HEADER_COLLAPSE_DURATION);
+    }
+
+    useEffect(() => {
+        let rafId: number;
+        const handleScroll = () => {
+            cancelAnimationFrame(rafId);
+            rafId = requestAnimationFrame(() => {
+                const y = window.scrollY;
+                const nowCollapsed = isScrolledRef.current;
+                let next = nowCollapsed;
+
+                if (nowCollapsed) {
+                    // Stay collapsed until scrolled back above expand threshold
+                    next = y > SCROLL_EXPAND;
+                } else {
+                    // Stay expanded until past collapse threshold
+                    next = y > SCROLL_COLLAPSE;
+                }
+
+                if (next !== nowCollapsed) {
+                    isScrolledRef.current = next;
+                    markHeaderTransitioning();
+                    setIsScrolled(next);
+                }
+            });
+        };
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        handleScroll();
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            cancelAnimationFrame(rafId);
+        };
+    }, []);
+
+    useEffect(() => {
+        return () => {
+            window.clearTimeout(categoryScrollTimeoutRef.current);
+            window.clearTimeout(headerTransitionTimeoutRef.current);
+        };
+    }, []);
+
+    // Initialise active category when sections first become available
+    const firstSectionSlug = menuSections[0]?.slug ?? '';
+    if (!activeCategory && firstSectionSlug) {
+        setActiveCategory(firstSectionSlug);
+    }
+
+    useEffect(() => {
+        const sections = menuSections.map((s) => document.getElementById(`category-${s.slug}`));
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                const visible = entries.find((e) => e.isIntersecting);
+                if (visible?.target.id) {
+                    const slug = visible.target.id.replace('category-', '');
+                    setActiveCategory(slug);
+                    // scroll pill into view
+                    const pill = pillNavRef.current?.querySelector<HTMLElement>(`[data-slug="${slug}"]`);
+                    pill?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                }
+            },
+            { threshold: 0.25, rootMargin: '-120px 0px -40% 0px' },
         );
       }
       return [...current, { name: item.name, quantity: 1, unitPrice: item.priceValue }];
@@ -349,7 +435,10 @@ export function HomeShell({
     router.push(`/checkout/review?table=${encodeURIComponent(tableCode)}` as Route);
   }
 
-  // ── Render ──────────────────────────────────────────────────────────────────
+        if (headerIsTransitioningRef.current) {
+            categoryScrollTimeoutRef.current = window.setTimeout(scrollToCategory, HEADER_COLLAPSE_DURATION);
+            return;
+        }
 
   return (
     <div className="bg-white sm:py-0 sm:px-6">
@@ -597,6 +686,7 @@ export function HomeShell({
                         </div>
                       ))}
                     </div>
+                </main>
 
                     {/* Price breakdown */}
                     <div className="mt-3.5 rounded-xl bg-white/8 px-3.5 py-3 space-y-1.5">
@@ -645,8 +735,5 @@ export function HomeShell({
             )}
           </Container>
         </div>
-
-      </div>
-    </div>
-  );
+    );
 }

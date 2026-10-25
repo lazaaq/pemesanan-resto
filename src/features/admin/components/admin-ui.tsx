@@ -37,6 +37,8 @@ export function TextInput({
   placeholder,
   required = false,
   type = "text",
+  value,
+  onChange,
 }: {
   defaultValue?: string | number | null;
   label: string;
@@ -44,19 +46,25 @@ export function TextInput({
   placeholder?: string;
   required?: boolean;
   type?: string;
+  value?: string;
+  onChange?: (value: string) => void;
 }) {
+  const isControlled = onChange !== undefined;
+
   return (
     <label className="flex flex-col gap-1.5">
       <span className="text-xs font-medium" style={{ color: "var(--admin-foreground)" }}>
         {label}
       </span>
       <input
-        defaultValue={defaultValue ?? ""}
         name={name}
         type={type}
         required={required}
         placeholder={placeholder}
         className="admin-input"
+        {...(isControlled
+          ? { value: value ?? "", onChange: (e) => onChange(e.target.value) }
+          : { defaultValue: defaultValue ?? "" })}
       />
     </label>
   );
