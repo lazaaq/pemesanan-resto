@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { HomeShell } from "@/features/home/components/home-shell";
 import { parseStoredCart, CHECKOUT_CART_COOKIE_KEY } from "@/features/order/lib/checkout";
+import { getTableCode } from "@/features/order/lib/tables";
 import { getActiveThemeCssVariables } from "@/lib/theme/get-active-theme-palette";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { siteConfig } from "@/config/site";
@@ -29,79 +30,25 @@ type CategoryRow = {
 
 type MenuItemWithCategories = MenuItemRow & { categories: string[] };
 
-export default async function HomePage() {
-    const themeCssVariables = await getActiveThemeCssVariables();
-    const cookieStore = await cookies();
-    const initialCart = parseStoredCart(cookieStore.get(CHECKOUT_CART_COOKIE_KEY)?.value);
+type HomeSearchParams = Promise<{
+  table?: string | string[];
+}>;
 
-    const supabase = await createServerSupabaseClient();
-    const { data: restaurant } = await supabase
-        .from("restaurants")
-        .select("id")
-        .eq("slug", siteConfig.restaurantSlug)
-        .single();
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: HomeSearchParams;
+}) {
+  const themeCssVariables = await getActiveThemeCssVariables();
+  const cookieStore = await cookies();
+  const initialCart = parseStoredCart(cookieStore.get(CHECKOUT_CART_COOKIE_KEY)?.value);
+  const params = await searchParams;
+  const requestedTable = Array.isArray(params.table) ? params.table[0] : params.table;
+  const tableCode = getTableCode(requestedTable);
 
-    if (!restaurant) {
-        return (
-            <div style={themeCssVariables}>
-                <HomeShell initialCart={initialCart} restaurantId={null} menuItems={[]} categorySections={[]} />
-            </div>
-        );
-    }
-
-    // Fetch active categories
-    const { data: categories } = await supabase
-        .from("categories")
-        .select("id, name, slug, sort_order, is_active")
-        .eq("restaurant_id", restaurant.id)
-        .eq("is_active", true)
-        .order("sort_order", { ascending: true });
-
-    // Fetch menu items (all — available first, unavailable at bottom per category)
-    const { data: menuItems } = await supabase
-        .from("menu_items")
-        .select("id, name, slug, description, price, image_url, sort_order, is_available, is_featured")
-        .eq("restaurant_id", restaurant.id)
-        .order("is_available", { ascending: false })
-        .order("sort_order", { ascending: true });
-
-    // Fetch menu-item-category relations
-    const { data: menuItemCategories } = await supabase
-        .from("menu_item_categories")
-        .select("menu_item_id, category_id");
-
-    // Build category slug → name mapping
-    const categoryMap = new Map((categories ?? []).map((c: CategoryRow) => [c.id, c.slug]));
-
-    // Build menu items with their category slugs
-    const menuItemMap = new Map<string, MenuItemWithCategories>();
-    for (const item of menuItems ?? []) {
-        menuItemMap.set(item.id, { ...item, categories: [] });
-    }
-    for (const mic of menuItemCategories ?? []) {
-        const slug = categoryMap.get(mic.category_id);
-        const item = menuItemMap.get(mic.menu_item_id);
-        if (slug && item) {
-            item.categories.push(slug);
-        }
-    }
-
-    const menuItemsWithCategories = Array.from(menuItemMap.values());
-
-    const categorySections = (categories ?? []).map((c: CategoryRow) => ({
-        label: c.name,
-        slug: c.slug,
-        description: "",
-    }));
-
-    return (
-        <div style={themeCssVariables}>
-            <HomeShell
-                initialCart={initialCart}
-                restaurantId={restaurant.id}
-                menuItems={menuItemsWithCategories}
-                categorySections={categorySections}
-            />
-        </div>
-    );
+  return (
+    <div style={themeCssVariables}>
+      <HomeShell initialCart={initialCart} tableCode={tableCode} />
+    </div>
+  );
 }

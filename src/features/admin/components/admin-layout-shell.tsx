@@ -51,14 +51,21 @@ function IconReceipt() {
     </svg>
   );
 }
-function IconTable() {
+function IconWallet() {
   return (
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-      <line x1="3" y1="9" x2="21" y2="9" />
-      <line x1="3" y1="15" x2="21" y2="15" />
-      <line x1="9" y1="3" x2="9" y2="21" />
-      <line x1="15" y1="3" x2="15" y2="21" />
+      <path d="M20 7V5a2 2 0 0 0-2-2H5a3 3 0 0 0 0 6h15v10a2 2 0 0 1-2 2H5a3 3 0 0 1-3-3V6" />
+      <path d="M16 13h2" />
+    </svg>
+  );
+}
+function IconQrCode() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="7" height="7" />
+      <rect x="14" y="3" width="7" height="7" />
+      <rect x="3" y="14" width="7" height="7" />
+      <path d="M14 14h3v3h-3zM18 18h3v3h-3zM14 21h3M21 14v3" />
     </svg>
   );
 }
@@ -99,7 +106,8 @@ function IconExternalLink() {
 const NAV_ITEMS = [
   { href: "/admin",                label: "Dashboard",        icon: <IconGrid />,           title: "Dashboard Restoran" },
   { href: "/admin/orders",         label: "Order",            icon: <IconReceipt />,        title: "Data Pemesanan" },
-  { href: "/admin/tables",         label: "Meja",             icon: <IconTable />,          title: "Kelola Meja & QR Code" },
+  { href: "/admin/finance",        label: "Keuangan",         icon: <IconWallet />,         title: "Laporan Keuangan" },
+  { href: "/admin/tables",         label: "QR Meja",           icon: <IconQrCode />,         title: "QR Code Meja" },
   { href: "/admin/menus",          label: "Menu",             icon: <IconUtensilsCrossed />, title: "Kelola Makanan & Minuman" },
   { href: "/admin/categories",     label: "Kategori",         icon: <IconTag />,            title: "Kelola Kategori Menu" },
   { href: "/admin/presets",        label: "Palet Warna",      icon: <IconPalette />,        title: "Pengaturan Palet Warna" },
@@ -118,12 +126,12 @@ function SidebarContent({
     <>
       {/* Logo / branding */}
       <div
-        style={{ borderBottom: "1px solid var(--admin-border)" }}
+        style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.16)" }}
         className="flex h-[var(--admin-navbar-h)] items-center gap-2.5 px-5"
       >
         <span
-          style={{ background: "var(--admin-primary)" }}
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-white"
+          style={{ background: "var(--admin-accent)", color: "var(--admin-primary)" }}
+          className="flex h-8 w-8 items-center justify-center rounded-lg"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" />
@@ -132,10 +140,10 @@ function SidebarContent({
           </svg>
         </span>
         <div>
-          <p className="text-sm font-semibold" style={{ color: "var(--admin-foreground)" }}>
+          <p className="text-sm font-semibold text-white">
             RestoFlow
           </p>
-          <p className="text-[11px]" style={{ color: "var(--admin-muted)" }}>
+          <p className="text-[11px]" style={{ color: "rgba(255, 255, 255, 0.68)" }}>
             Admin Panel
           </p>
         </div>
@@ -145,7 +153,7 @@ function SidebarContent({
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         <p
           className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest"
-          style={{ color: "var(--admin-muted)", opacity: 0.7 }}
+          style={{ color: "rgba(255, 255, 255, 0.62)" }}
         >
           Navigasi
         </p>
@@ -170,7 +178,7 @@ function SidebarContent({
 
       {/* Sidebar footer */}
       <div
-        style={{ borderTop: "1px solid var(--admin-border)" }}
+        style={{ borderTop: "1px solid rgba(255, 255, 255, 0.16)" }}
         className="px-3 py-4"
       >
         <Link
@@ -222,7 +230,14 @@ export function AdminLayoutShell({
       />
 
       {/* ── Sidebar ── */}
-      <aside className={`admin-sidebar${sidebarOpen ? " open" : ""}`} aria-label="Admin navigation">
+      <aside
+        className={`admin-sidebar${sidebarOpen ? " open" : ""}`}
+        style={{
+          background: "linear-gradient(180deg, #093fb4 0%, #062a7b 100%)",
+          borderRight: "1px solid rgba(255, 255, 255, 0.16)",
+        }}
+        aria-label="Admin navigation"
+      >
         <SidebarContent
           pathname={pathname}
           onNavClick={() => setSidebarOpen(false)}

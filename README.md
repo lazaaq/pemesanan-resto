@@ -96,6 +96,47 @@ Admin dashboard tersedia di `/admin` dengan login Supabase Auth di `/admin/login
 
 Versi saat ini mengasumsikan user yang bisa login ke Supabase Auth adalah user admin untuk dashboard ini.
 
+## Integrasi Duitku
+
+Halaman `/checkout/review` memakai alur Duitku Create Invoice. Server membuat order dan invoice, browser diarahkan ke `paymentUrl` Duitku, lalu endpoint callback memverifikasi signature dan nominal sebelum mengubah `payment_status` menjadi `paid`.
+
+Tambahkan credential berikut ke `.env.local` (jangan gunakan prefix `NEXT_PUBLIC_` untuk secret):
+
+```bash
+DUITKU_MERCHANT_CODE=your-duitku-merchant-code
+DUITKU_API_KEY=your-duitku-api-key
+DUITKU_IS_PRODUCTION=false
+DUITKU_EXPIRY_PERIOD=60
+```
+
+`DUITKU_IS_PRODUCTION=false` memakai sandbox. Setelah siap live, ubah menjadi `true` dan pastikan `NEXT_PUBLIC_APP_URL` berisi domain HTTPS publik. Duitku harus dapat mengakses callback berikut:
+
+```text
+https://domain-anda.com/api/payments/duitku/callback
+```
+
+Untuk sandbox, buat akun di [Merchant Portal Duitku](https://sandbox.duitku.com), buat project, lalu ambil Merchant Code dan API Key dari project tersebut. Daftarkan URL callback di detail project Duitku. Untuk production, gunakan akun/merchant project production yang sudah aktif dan approval channel pembayaran yang diperlukan.
+
+### Notifikasi email
+
+Aplikasi mengirim dua jenis email melalui [Resend](https://resend.com):
+
+- invoice dan link pembayaran setelah invoice Duitku berhasil dibuat
+- konfirmasi pembayaran setelah callback Duitku memvalidasi pembayaran berhasil
+
+Tambahkan credential berikut ke environment server (jangan gunakan prefix `NEXT_PUBLIC_`):
+
+```bash
+RESEND_API_KEY=your-resend-api-key
+EMAIL_FROM="RestoFlow <no-reply@your-verified-domain.com>"
+EMAIL_FROM_NAME=RestoFlow
+EMAIL_REPLY_TO=your-reply-address@example.com
+```
+
+`RESEND_API_KEY` didapatkan dari Resend Dashboard → API Keys. `EMAIL_FROM` harus memakai alamat dari domain yang sudah diverifikasi di Resend Dashboard → Domains. Untuk pengujian awal, Resend menyediakan `onboarding@resend.dev`, tetapi pengiriman production sebaiknya memakai domain sendiri yang sudah diverifikasi. `EMAIL_REPLY_TO` bersifat opsional.
+
+Endpoint callback tidak boleh digantikan oleh `returnUrl`: `returnUrl` hanya untuk mengembalikan browser pelanggan, sedangkan status order hanya boleh diubah berdasarkan callback Duitku yang signature-nya valid.
+
 ### Alur setup admin
 
 1. Pastikan `.env.local` sudah berisi `NEXT_PUBLIC_SUPABASE_URL` dan salah satu dari `NEXT_PUBLIC_SUPABASE_ANON_KEY` atau `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
@@ -106,7 +147,6 @@ Versi saat ini mengasumsikan user yang bisa login ke Supabase Auth adalah user a
 Kalau nanti Anda ingin, saya juga bisa bantu lanjut ke tahap berikutnya:
 
 - menghubungkan halaman menu ke data Supabase secara langsung
-- membuat proses checkout menyimpan order ke tabel `orders` dan `order_items`
 - menambahkan auth admin/kasir untuk mengelola menu dan status pesanan
 
 ## Langkah Lanjut yang Disarankan

@@ -5,6 +5,7 @@ import {
   type CartItem,
   getOrderSummary,
 } from "@/features/order/lib/checkout";
+import { getTableCode } from "@/features/order/lib/tables";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 type CreateOrderBody = {
@@ -40,9 +41,7 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as CreateOrderBody;
     const cart = sanitizeCart(body.cart);
-    const tableCode = typeof body.tableCode === "string" && body.tableCode.trim()
-      ? body.tableCode.trim()
-      : siteConfig.defaultTableCode;
+    const tableCode = getTableCode(body.tableCode, siteConfig.defaultTableCode);
 
     if (!cart.length) {
       return NextResponse.json(
